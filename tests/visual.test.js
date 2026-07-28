@@ -37,6 +37,15 @@ test('modal source contract provides useful focus and restores its opener', () =
   assert.match(app, /if \(trigger\?\.isConnected\) trigger\.focus\(\)/);
 });
 
+
+test('modal source contract traps keyboard focus while open', () => {
+  assert.match(app, /event\.key === 'Tab' && modalWrap\.classList\.contains\('open'\)/);
+  assert.match(app, /modalFocusableSelector = 'button:not\(\[disabled\]\)/);
+  assert.match(app, /event\.shiftKey \? last : first/);
+  assert.match(app, /if \(!first\) \{ event\.preventDefault\(\); modalWrap\.querySelector\('\.modal'\)\?\.focus\(\)/);
+  assert.match(app, /if \(event\.key === 'Escape'\) \{ closeModal\(\); return; \}/);
+});
+
 test('visual system includes accessible interaction guardrails', () => {
   for (const token of ['#fff9ef', '#25483c', '#dcefe2', '#ffd978', '#f47b61']) assert.match(css, new RegExp(token, 'i'));
   assert.match(css, /min-height:\s*44px/);

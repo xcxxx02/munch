@@ -14,7 +14,9 @@ const app = document.querySelector('#app'), modalWrap = document.querySelector('
 function persist(next) { state = next; saveFailed = !saveState(window.localStorage, state); render(); }
 function dispatch(action) { try { persist(action(state)); } catch (error) { showToast(error.message); } }
 function showToast(message) { toast.textContent = message; toast.classList.add('show'); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400); }
-function openModal(html) { modalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null; modalContent.innerHTML = html; modalWrap.classList.add('open'); modalWrap.setAttribute('aria-hidden', 'false'); (modalContent.querySelector('input, button, [tabindex]:not([tabindex=\"-1\"])') ?? modalWrap.querySelector('.modal-close') ?? modalWrap.querySelector('.modal'))?.focus(); }
+const modalFocusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+function modalFocusable() { return [...modalWrap.querySelectorAll(modalFocusableSelector)].filter(element => element.offsetParent !== null || element === document.activeElement); }
+function openModal(html) { modalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null; modalContent.innerHTML = html; modalWrap.classList.add('open'); modalWrap.setAttribute('aria-hidden', 'false'); (modalContent.querySelector('input, button, [tabindex]:not([tabindex="-1"])') ?? modalWrap.querySelector('.modal-close') ?? modalWrap.querySelector('.modal'))?.focus(); }
 function closeModal() { modalWrap.classList.remove('open'); modalWrap.setAttribute('aria-hidden', 'true'); const trigger = modalTrigger; modalTrigger = null; if (trigger?.isConnected) trigger.focus(); }
 function recipeDetail(recipe, step = 0) {
   const availability = getAvailability(recipe, state.pantry);
@@ -47,5 +49,13 @@ if (action === 'save-manual-grocery') {
 if (action === 'clear-checked') { persist({ ...state, grocery: state.grocery.filter(item => !item.checked) }); showToast('Checked items cleared'); } if (action === 'remove-plan') { persist(reconcilePlannedGroceries({ ...state, mealPlan: state.mealPlan.filter(item => !(item.date === target.dataset.date && item.mealType === target.dataset.mealType)) }, recipes, ingredients)); closeModal(); showToast('Meal removed'); } if (action === 'edit-pantry') editPantry(target.dataset.pantryId); if (action === 'save-pantry') { const fields = Object.fromEntries([...modalContent.querySelectorAll('[data-pantry-field]')].map(field => [field.dataset.pantryField, field.value])); dispatch(s => updatePantryItem(s, target.dataset.pantryId, fields)); closeModal(); showToast('Pantry updated'); } if (action === 'remove-pantry') { dispatch(s => removePantryItem(s, target.dataset.pantryId)); closeModal(); showToast('Removed from pantry'); } if (action === 'keep-pantry') { closeModal(); showToast('Keeping it for now'); } if (action === 'replace-pantry') { closeModal(); quickAdd(); } if (event.target.closest('[data-close-modal]')) closeModal(); });
 document.addEventListener('input', event => { if (event.target.matches('[data-filter="search"]')) { filters.search = event.target.value; render(); const input = document.querySelector('[data-filter="search"]'); input?.focus(); input?.setSelectionRange(filters.search.length, filters.search.length); } });
 document.addEventListener('click', event => { const tag = event.target.closest('[data-filter-tag]'); if (tag) { filters.tag = tag.dataset.filterTag; filters.stocked = false; render(); } const stocked = event.target.closest('[data-filter-stocked]'); if (stocked) { filters.stocked = !filters.stocked; render(); } const time = event.target.closest('[data-filter-time]'); if (time) { filters.time = time.dataset.filterTime; render(); } });
-document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); const roleButton = event.target.closest('[role="button"]'); if ((event.key === 'Enter' || event.key === ' ') && roleButton) { event.preventDefault(); roleButton.click(); } });
+document.addEventListener('keydown', event => {
+ if (event.key === 'Escape') { closeModal(); return; }
+ if (event.key === 'Tab' && modalWrap.classList.contains('open')) {
+  const focusable = modalFocusable(); const first = focusable[0]; const last = focusable[focusable.length - 1];
+  if (!first) { event.preventDefault(); modalWrap.querySelector('.modal')?.focus(); return; }
+  if (event.shiftKey ? document.activeElement === first || !modalWrap.contains(document.activeElement) : document.activeElement === last || !modalWrap.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first).focus(); }
+ }
+ const roleButton = event.target.closest('[role="button"]'); if ((event.key === 'Enter' || event.key === ' ') && roleButton) { event.preventDefault(); roleButton.click(); }
+});
 window.addEventListener('beforeunload', () => saveState(window.localStorage, state)); render();
