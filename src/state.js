@@ -1,4 +1,4 @@
-﻿import { createMealPlanEntry, mergeGroceryItems } from './domain.js';
+import { createMealPlanEntry, getAvailability, mergeGroceryItems } from './domain.js';
 
 export const DEFAULT_STATE = {
   version: 1,
@@ -116,4 +116,35 @@ export function addMissingIngredients(state, missing) {
     return { ...normalized, source };
   });
   return { ...state, grocery: mergeGroceryItems([...state.grocery.map(normalizeGroceryItem), ...additions]) };
+}
+
+export function reconcilePlannedGroceries(state, recipes, ingredients = []) {
+  assertState(state);
+  if (!Array.isArray(recipes)) throw new Error('recipes must be an array');
+  const recipeItems = [];
+  const checkedRecipeItems = new Map(state.grocery.filter(item => item.source === 'recipe').map(item => [item.ingredientId + '|' + item.unit, Boolean(item.checked)]));
+  for (const entry of state.mealPlan) {
+    const recipe = recipes.find(candidate => candidate?.id === entry?.recipeId);
+    if (!recipe) continue;
+    const catalog = new Map(ingredients.map(item => [item.id, item]));
+    for (const missing of getAvailability(recipe, state.pantry).missing) {
+      recipeItems.push({ ...missing, id: 'grocery-' + missing.ingredientId + '-' + missing.unit, name: catalog.get(missing.ingredientId)?.name, category: catalog.get(missing.ingredientId)?.category, checked: checkedRecipeItems.get(missing.ingredientId + '|' + missing.unit) || false, source: 'recipe' });
+    }
+  }
+  const preserved = state.grocery.map(normalizeGroceryItem).filter(item => item.source !== 'recipe');
+  return { ...state, grocery: mergeGroceryItems([...preserved, ...recipeItems]) };
+}
+
+export function addManualGroceryItem(state, item) {
+  assertState(state);
+  requireRecord(item, 'manual grocery item must be an object');
+  const name = normalizeIdentifier(item.name, 'name must be a non-blank string');
+  const unit = normalizeIdentifier(item.unit, 'unit must be a non-blank string');
+  const quantity = Number(item.quantity);
+  if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('quantity must be a positive number');
+  const ingredientId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'manual-item';
+  return { ...state, grocery: mergeGroceryItems([...state.grocery.map(normalizeGroceryItem), {
+    id: 'manual-' + ingredientId + '-' + unit, ingredientId, name, quantity, unit,
+    category: item.category?.trim() || 'Kitchen', checked: false, source: 'manual',
+  }]) };
 }

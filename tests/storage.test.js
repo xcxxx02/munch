@@ -1,10 +1,12 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { clearState, loadState, saveState } from '../src/storage.js';
 import {
   DEFAULT_STATE,
   addMissingIngredients,
+  reconcilePlannedGroceries,
+  addManualGroceryItem,
   addPantryItem,
   updatePantryItem,
   removePantryItem,
@@ -172,4 +174,32 @@ test('recipe grocery additions receive stable ids and pantry details can be edit
   const edited = updatePantryItem(state, 'p1', { quantity: 4, expiryDate: '2026-08-01' });
   assert.deepEqual(edited.pantry[0], { id: 'p1', ingredientId: 'egg', quantity: 4, unit: 'pieces', expiryDate: '2026-08-01' });
   assert.deepEqual(removePantryItem(edited, 'p1').pantry, []);
+});
+
+test('reconcilePlannedGroceries removes stale recipe rows and preserves manual checked state', () => {
+  const recipes = [
+    { id: 'old', ingredients: [{ ingredientId: 'tomato', quantity: 2, unit: 'pieces' }] },
+    { id: 'new', ingredients: [{ ingredientId: 'egg', quantity: 2, unit: 'pieces' }] },
+  ];
+  const state = {
+    ...DEFAULT_STATE,
+    pantry: [],
+    mealPlan: [{ id: 'meal', date: '2026-07-29', mealType: 'dinner', recipeId: 'new' }],
+    grocery: [
+      { id: 'grocery-tomato-pieces', ingredientId: 'tomato', quantity: 2, unit: 'pieces', checked: true, source: 'recipe' },
+      { id: 'manual-egg-pieces', ingredientId: 'egg', name: 'Eggs', quantity: 1, unit: 'pieces', checked: true, source: 'manual' },
+    ],
+  };
+  const next = reconcilePlannedGroceries(state, recipes);
+  assert.deepEqual(next.grocery.map(item => [item.ingredientId, item.source, item.quantity, item.checked]), [
+    ['egg', 'mixed', 3, true],
+  ]);
+});
+
+test('addManualGroceryItem creates a stable manual grocery row', () => {
+  const next = addManualGroceryItem({ ...DEFAULT_STATE }, { name: 'Limes', quantity: '2', unit: 'pieces', category: 'Produce' });
+  assert.deepEqual(next.grocery[0], {
+    id: 'manual-limes-pieces', ingredientId: 'limes', name: 'Limes', quantity: 2,
+    unit: 'pieces', category: 'Produce', checked: false, source: 'manual',
+  });
 });

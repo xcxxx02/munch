@@ -81,17 +81,28 @@ export function getAvailability(recipe, pantry) {
   const missing = [];
   let availableCount = 0;
   for (const ingredient of ingredients) {
-    const stock = pantryItems
-      .filter(item => item?.ingredientId === ingredient?.ingredientId
-        && hasRequiredKeyValue(item?.unit)
-        && hasRequiredKeyValue(ingredient?.unit)
-        && item.unit === ingredient.unit)
-      .reduce((total, item) => total + asQuantity(item?.quantity), 0);
-    const required = asQuantity(ingredient?.quantity);
-    if (stock >= required) availableCount += 1;
-    else missing.push({ ingredientId: ingredient?.ingredientId, quantity: required - stock, unit: ingredient?.unit });
+    const availability = getIngredientAvailability(ingredient, pantryItems);
+    if (availability.available) availableCount += 1;
+    else missing.push({ ingredientId: ingredient?.ingredientId, quantity: availability.missingQuantity, unit: ingredient?.unit });
   }
   return { availableCount, totalCount: ingredients.length, missing };
+}
+
+export function getIngredientAvailability(ingredient, pantry) {
+  const pantryItems = Array.isArray(pantry) ? pantry : [];
+  const stock = pantryItems
+    .filter(item => item?.ingredientId === ingredient?.ingredientId
+      && hasRequiredKeyValue(item?.unit)
+      && hasRequiredKeyValue(ingredient?.unit)
+      && item.unit === ingredient.unit)
+    .reduce((total, item) => total + asQuantity(item?.quantity), 0);
+  const requiredQuantity = asQuantity(ingredient?.quantity);
+  return {
+    available: stock >= requiredQuantity,
+    stock,
+    requiredQuantity,
+    missingQuantity: Math.max(0, requiredQuantity - stock),
+  };
 }
 
 export function getExpiryRecommendations(pantry, today = new Date(), windowDays = 3) {
