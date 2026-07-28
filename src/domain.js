@@ -1,4 +1,5 @@
 const MEAL_TYPES = new Set(['breakfast', 'lunch', 'dinner']);
+const GROCERY_SOURCES = new Set(['recipe', 'manual']);
 
 // Duplicate metadata uses the lexicographically smallest non-null value.
 function compareMetadata(left, right) {
@@ -26,6 +27,10 @@ function asQuantity(value) {
 
 function hasRequiredKeyValue(value) {
   return value !== undefined && value !== null && value !== '';
+}
+
+function asGrocerySource(value) {
+  return GROCERY_SOURCES.has(value) ? value : undefined;
 }
 
 function parseDate(value) {
@@ -123,10 +128,9 @@ export function mergeGroceryItems(items) {
       if (hasRequiredKeyValue(existing.id) || hasRequiredKeyValue(item?.id)) {
         existing.id = compareMetadata(existing.id, item?.id);
       }
-      const existingSourceKnown = existing.source !== undefined;
-      const itemSourceKnown = item?.source !== undefined;
-      if (itemSourceKnown && (!existingSourceKnown || existing.source !== item.source)) {
-        existing.source = existingSourceKnown ? 'mixed' : item.source;
+      const itemSource = asGrocerySource(item?.source);
+      if (itemSource !== undefined && (existing.source === undefined || existing.source !== itemSource)) {
+        existing.source = existing.source === undefined ? itemSource : 'mixed';
       }
     } else {
       const mergedItem = {
@@ -138,7 +142,8 @@ export function mergeGroceryItems(items) {
         checked: Boolean(item?.checked),
       };
       if (hasRequiredKeyValue(item?.id)) mergedItem.id = item.id;
-      if (item?.source !== undefined) mergedItem.source = item.source;
+      const source = asGrocerySource(item?.source);
+      if (source !== undefined) mergedItem.source = source;
       merged.set(key, mergedItem);
     }
   }

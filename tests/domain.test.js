@@ -312,3 +312,23 @@ test('mergeGroceryItems ignores missing sources when preserving known sources', 
   assert.equal(mergeGroceryItems(recipeAndManual)[0].source, 'mixed');
   assert.equal(mergeGroceryItems([...recipeAndManual].reverse())[0].source, 'mixed');
 });
+
+test('mergeGroceryItems treats null and unknown sources as unknown', () => {
+  const nullAndManual = mergeGroceryItems([
+    { source: null, ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+    { source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 2 },
+  ]);
+  assert.equal(nullAndManual[0].source, 'manual');
+
+  const unknownAndRecipe = mergeGroceryItems([
+    { source: 'imported', ingredientId: 'flour', unit: 'kg', quantity: 1 },
+    { source: 'recipe', ingredientId: 'flour', unit: 'kg', quantity: 2 },
+  ]);
+  assert.equal(unknownAndRecipe[0].source, 'recipe');
+
+  const onlyUnknown = mergeGroceryItems([
+    { source: 'imported', ingredientId: 'rice', unit: 'kg', quantity: 1 },
+    { source: '', ingredientId: 'rice', unit: 'kg', quantity: 2 },
+  ]);
+  assert.equal(Object.hasOwn(onlyUnknown[0], 'source'), false);
+});
