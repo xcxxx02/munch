@@ -77,3 +77,61 @@ test('merges missing ingredients into grocery state', () => {
   }]);
   assert.equal(state.grocery[0].quantity, 1);
 });
+
+test('loadState discards malformed records and normalizes persisted state', () => {
+  const persisted = {
+    version: 1,
+    pantry: [{ id: ' p1 ', name: 'Eggs' }, null, { id: '   ', name: 'Bad' }, 'bad'],
+    mealPlan: [
+      { id: 'old', date: '2026-07-29', mealType: 'dinner', recipeId: 'r1' },
+      { id: 'new', date: '2026-07-29T12:00:00Z', mealType: 'dinner', recipeId: 'r2' },
+      { date: 'not-a-date', mealType: 'lunch', recipeId: 'r3' },
+    ],
+    grocery: [
+      { id: 'g1', ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+      null,
+      { ingredientId: 'broken', quantity: 2 },
+    ],
+    preferences: { dietaryTags: [' halal ', null, 'halal'] },
+  };
+  const loaded = loadState(memoryStorage({ 'munch:v1': JSON.stringify(persisted) }), DEFAULT_STATE);
+  assert.deepEqual(loaded.pantry, [{ id: 'p1', name: 'Eggs' }]);
+  assert.deepEqual(loaded.mealPlan.map(item => [item.date, item.mealType, item.recipeId]), [['2026-07-29', 'dinner', 'r2']]);
+  assert.deepEqual(loaded.grocery.map(item => item.ingredientId), ['egg']);
+  assert.deepEqual(loaded.preferences.dietaryTags, ['halal']);
+});
+
+test('storage methods safely handle throwing storage implementations', () => {
+  const storage = {
+    getItem() { throw new Error('read failed'); },
+    setItem() { throw new Error('write failed'); },
+    removeItem() { throw new Error('delete failed'); },
+  };
+  assert.strictEqual(loadState(storage, DEFAULT_STATE), DEFAULT_STATE);
+  assert.equal(saveState(storage, DEFAULT_STATE), false);
+  assert.equal(clearState(storage), false);
+});
+
+test('clearState removes the persisted state', () => {
+  const storage = memoryStorage({ 'munch:v1': JSON.stringify(DEFAULT_STATE) });
+  assert.equal(clearState(storage), true);
+  assert.equal(storage.getItem('munch:v1'), null);
+});
+
+test('actions reject invalid inputs without changing state', () => {
+  const state = { ...DEFAULT_STATE, pantry: [], grocery: [], mealPlan: [] };
+  assert.throws(() => addPantryItem(state, { id: '   ' }), { message: 'pantry item id must be a non-blank string' });
+  assert.throws(() => addRecipeToPlan(state, { date: 'bad', mealType: 'dinner', recipeId: 'r1' }), { message: 'date must be a valid date' });
+  assert.throws(() => toggleGroceryItem(state, '  '), { message: 'groceryId must be a non-blank string' });
+  assert.throws(() => addMissingIngredients(state, [{ ingredientId: 'egg' }]), { message: 'ingredientId and unit are required for grocery items' });
+  assert.deepEqual(state, { ...DEFAULT_STATE, pantry: [], grocery: [], mealPlan: [] });
+});
+
+test('meal actions normalize dates and replace equivalent meal slots immutably', () => {
+  const oldEntry = { id: 'old', date: '2026-07-29', mealType: 'dinner', recipeId: 'r1' };
+  const state = { ...DEFAULT_STATE, mealPlan: [oldEntry] };
+  const next = addRecipeToPlan(state, { id: 'new', date: '2026-07-29T12:00:00Z', mealType: 'dinner', recipeId: 'r2' });
+  assert.equal(next.mealPlan.length, 1);
+  assert.deepEqual(next.mealPlan[0], { id: 'new', date: '2026-07-29', mealType: 'dinner', recipeId: 'r2' });
+  assert.strictEqual(state.mealPlan[0], oldEntry);
+});
