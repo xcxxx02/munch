@@ -389,36 +389,61 @@ test('every curated recipe satisfies the data contract', () => {
   const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
   const ingredientById = new Map(ingredients.map(ingredient => [ingredient.id, ingredient]));
   const recipeIds = new Set();
+  const requiredRecipes = new Map([
+    ['nasi-lemak', 'Nasi Lemak'],
+    ['nasi-goreng-kampung', 'Nasi Goreng Kampung'],
+    ['tomato-egg-rice', 'Tomato Egg Rice'],
+    ['chicken-teriyaki-rice', 'Chicken Teriyaki Rice'],
+    ['mee-goreng', 'Mee Goreng'],
+    ['chicken-porridge', 'Chicken Porridge'],
+    ['vegetable-fried-rice', 'Vegetable Fried Rice'],
+    ['roti-telur', 'Roti Telur'],
+  ]);
+  const supportedDifficulties = new Set(['easy', 'medium', 'hard']);
 
-  assert.deepEqual(
-    recipes.map(recipe => [recipe.id, recipe.name]),
-    [
-      ['nasi-lemak', 'Nasi Lemak'],
-      ['nasi-goreng-kampung', 'Nasi Goreng Kampung'],
-      ['tomato-egg-rice', 'Tomato Egg Rice'],
-      ['chicken-teriyaki-rice', 'Chicken Teriyaki Rice'],
-      ['mee-goreng', 'Mee Goreng'],
-      ['chicken-porridge', 'Chicken Porridge'],
-      ['vegetable-fried-rice', 'Vegetable Fried Rice'],
-      ['roti-telur', 'Roti Telur'],
-    ],
-  );
+  for (const [id, name] of requiredRecipes) {
+    const matchingRecipes = recipes.filter(recipe => recipe.id === id);
+    assert.equal(matchingRecipes.length, 1, `missing required recipe: ${id}`);
+    assert.equal(matchingRecipes[0].name, name, `${id} has the wrong name`);
+  }
   for (const recipe of recipes) {
-    for (const field of ['id', 'name', 'localName', 'timeMinutes', 'difficulty', 'dietaryTags', 'image', 'fallbackImage', 'ingredients', 'steps']) {
-      assert.ok(recipe[field] !== undefined && recipe[field] !== null, `${recipe.id} is missing ${field}`);
+    assert.equal(typeof recipe, 'object');
+    assert.notEqual(recipe, null);
+    for (const field of ['id', 'name', 'localName', 'image', 'fallbackImage']) {
+      assert.equal(typeof recipe[field], 'string', `${recipe.id} must have a string ${field}`);
+      assert.ok(recipe[field].trim().length > 0, `${recipe.id} must have a non-empty ${field}`);
     }
+    assert.equal(Number.isInteger(recipe.timeMinutes), true, `${recipe.id} must have an integer timeMinutes`);
+    assert.ok(recipe.timeMinutes > 0, `${recipe.id} must have a positive timeMinutes`);
+    assert.equal(typeof recipe.difficulty, 'string', `${recipe.id} must have a string difficulty`);
+    assert.equal(supportedDifficulties.has(recipe.difficulty), true, `${recipe.id} has an invalid difficulty`);
+    assert.equal(typeof recipe.mealType, 'string', `${recipe.id} must have a string mealType`);
+    assert.ok(Array.isArray(recipe.ingredients), `${recipe.id} ingredients must be an array`);
+    assert.ok(recipe.ingredients.length >= 1, `${recipe.id} has no ingredients`);
+    assert.ok(Array.isArray(recipe.steps), `${recipe.id} steps must be an array`);
+    assert.ok(recipe.steps.length >= 1, `${recipe.id} has no cooking steps`);
+    assert.ok(Array.isArray(recipe.dietaryTags), `${recipe.id} dietaryTags must be an array`);
     assert.equal(recipeIds.has(recipe.id), false, `duplicate recipe id: ${recipe.id}`);
     recipeIds.add(recipe.id);
     assert.equal(mealTypes.includes(recipe.mealType), true, `${recipe.id} has an invalid meal type`);
-    assert.ok(recipe.dietaryTags.every(tag => dietaryTags.includes(tag)), `${recipe.id} has an invalid dietary tag`);
+    assert.ok(recipe.dietaryTags.every(tag => typeof tag === 'string' && dietaryTags.includes(tag)), `${recipe.id} has an invalid dietary tag`);
     assert.match(recipe.image, new RegExp(`^/recipes/${recipe.id}\\.jpg$`));
-    assert.ok(recipe.steps.length >= 1, `${recipe.id} has no cooking steps`);
+    for (const step of recipe.steps) {
+      assert.equal(typeof step, 'string', `${recipe.id} steps must contain strings`);
+      assert.ok(step.trim().length > 0, `${recipe.id} steps must contain non-empty strings`);
+    }
     for (const reference of recipe.ingredients) {
+      assert.equal(typeof reference, 'object', `${recipe.id} ingredient references must be objects`);
+      assert.notEqual(reference, null, `${recipe.id} ingredient references must not be null`);
+      assert.equal(Array.isArray(reference), false, `${recipe.id} ingredient references must not be arrays`);
+      assert.equal(typeof reference.ingredientId, 'string', `${recipe.id} ingredient references need an ingredientId`);
+      assert.ok(reference.ingredientId.trim().length > 0, `${recipe.id} ingredientId must be non-empty`);
+      assert.equal(Number.isFinite(reference.quantity), true, `${recipe.id} ingredient quantities must be finite numbers`);
+      assert.ok(reference.quantity > 0, `${recipe.id} ingredient quantities must be positive`);
+      assert.equal(typeof reference.unit, 'string', `${recipe.id} ingredient references need a unit`);
+      assert.ok(reference.unit.trim().length > 0, `${recipe.id} ingredient units must be non-empty`);
       assert.equal(ingredientIds.has(reference.ingredientId), true, `${recipe.id} references ${reference.ingredientId}`);
       const ingredient = ingredientById.get(reference.ingredientId);
-      assert.equal(typeof reference.quantity, 'number');
-      assert.ok(reference.quantity > 0);
-      assert.equal(typeof reference.unit, 'string');
       assert.equal(reference.unit, ingredient.defaultUnit, `${recipe.id} must use ${reference.ingredientId}'s catalog unit`);
     }
   }
