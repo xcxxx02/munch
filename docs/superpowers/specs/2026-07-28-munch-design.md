@@ -132,7 +132,7 @@ The first release stores data in localStorage, but the domain objects should be 
 - quantity
 - unit
 - category
-- source: recipe | manual
+- source: recipe | manual | mixed (mixed is output-only when both known sources conflict)
 - checked
 
 The application state should keep recipes as curated reference data and user-owned pantry, plan and grocery records as mutable data. Grocery entries derived from recipes must be recomputable so that changing a plan can update missing ingredients without creating duplicates.

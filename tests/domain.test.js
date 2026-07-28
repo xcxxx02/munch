@@ -89,6 +89,46 @@ test('getAvailability treats stock with an incompatible unit as unavailable', ()
   });
 });
 
+test('getAvailability treats missing recipe and pantry units as incompatible', () => {
+  const recipe = {
+    ingredients: [
+      { ingredientId: 'flour', quantity: 2 },
+      { ingredientId: 'sugar', quantity: 1, unit: 'kg' },
+    ],
+  };
+  const pantry = [
+    { ingredientId: 'flour', quantity: 5 },
+    { ingredientId: 'sugar', quantity: 3 },
+  ];
+
+  assert.deepEqual(getAvailability(recipe, pantry), {
+    availableCount: 0,
+    totalCount: 2,
+    missing: [
+      { ingredientId: 'flour', quantity: 2, unit: undefined },
+      { ingredientId: 'sugar', quantity: 1, unit: 'kg' },
+    ],
+  });
+});
+
+test('getAvailability treats a missing unit on either side as incompatible', () => {
+  const recipe = {
+    ingredients: [
+      { ingredientId: 'egg', quantity: 2, unit: 'pieces' },
+    ],
+  };
+  const pantry = [
+    { ingredientId: 'egg', quantity: 2 },
+  ];
+
+  assert.deepEqual(getAvailability(recipe, pantry), {
+    availableCount: 0,
+    totalCount: 1,
+    missing: [
+      { ingredientId: 'egg', quantity: 2, unit: 'pieces' },
+    ],
+  });
+});
 test('getExpiryRecommendations ignores items without expiry and sorts soonest first', () => {
   const today = new Date('2026-07-28T00:00:00.000Z');
   const pantry = [

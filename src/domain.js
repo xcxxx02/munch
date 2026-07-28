@@ -78,7 +78,10 @@ export function getAvailability(recipe, pantry) {
   let availableCount = 0;
   for (const ingredient of ingredients) {
     const stock = pantryItems
-      .filter(item => item?.ingredientId === ingredient?.ingredientId && item?.unit === ingredient?.unit)
+      .filter(item => item?.ingredientId === ingredient?.ingredientId
+        && hasRequiredKeyValue(item?.unit)
+        && hasRequiredKeyValue(ingredient?.unit)
+        && item.unit === ingredient.unit)
       .reduce((total, item) => total + asQuantity(item?.quantity), 0);
     const required = asQuantity(ingredient?.quantity);
     if (stock >= required) availableCount += 1;
