@@ -141,3 +141,31 @@ test('mergeGroceryItems merges only matching ingredientId and unit pairs', () =>
     { ingredientId: 'egg', name: 'Eggs', quantity: 6, unit: 'pieces', category: 'Dairy', checked: false },
   ]);
 });
+
+test('getExpiryRecommendations uses id then name to break same-date ties', () => {
+  const today = new Date('2026-07-28T00:00:00.000Z');
+  const pantry = [
+    { id: 'b', ingredientId: 'banana', name: 'Bananas', expiryDate: '2026-07-29' },
+    { id: 'a', ingredientId: 'banana-green', name: 'Bananas', expiryDate: '2026-07-29' },
+    { id: 'a', ingredientId: 'apple', name: 'Apples', expiryDate: '2026-07-29' },
+  ];
+
+  assert.deepEqual(getExpiryRecommendations(pantry, today, 3).map(item => item.id), ['a', 'a', 'b']);
+});
+
+test('mergeGroceryItems chooses duplicate metadata deterministically', () => {
+  const items = [
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 1, unit: 'pieces', category: 'Produce' },
+    { ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 2, unit: 'pieces', category: 'Fruit' },
+  ];
+  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: false }];
+  assert.deepEqual(mergeGroceryItems(items), expected);
+  assert.deepEqual(mergeGroceryItems([...items].reverse()), expected);
+});
+
+test('createMealPlanEntry treats timezone-less datetimes as UTC', () => {
+  assert.equal(
+    createMealPlanEntry({ date: '2026-07-28T23:30:00', mealType: 'dinner', recipeId: 'r4' }).date,
+    '2026-07-28',
+  );
+});

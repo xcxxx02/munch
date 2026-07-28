@@ -1,5 +1,19 @@
 const MEAL_TYPES = new Set(['breakfast', 'lunch', 'dinner']);
 
+// Duplicate metadata uses the lexicographically smallest non-null value.
+function compareMetadata(left, right) {
+  if (left === right) return left;
+  if (left === undefined || left === null) return right;
+  if (right === undefined || right === null) return left;
+  return String(left) < String(right) ? left : right;
+}
+
+function compareStableValue(left, right) {
+  const leftValue = left === undefined || left === null ? '' : String(left);
+  const rightValue = right === undefined || right === null ? '' : String(right);
+  return leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0;
+}
+
 function asQuantity(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
@@ -10,6 +24,23 @@ function parseDate(value) {
   }
 
   if (typeof value !== 'string' && typeof value !== 'number') return null;
+
+  if (typeof value === 'string') {
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (dateOnly) {
+      const [, year, month, day] = dateOnly;
+      const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+      return date.getUTCFullYear() === Number(year)
+        && date.getUTCMonth() === Number(month) - 1
+        && date.getUTCDate() === Number(day)
+        ? date
+        : null;
+    }
+
+    const timezoneLessDateTime = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
+    if (timezoneLessDateTime.test(value)) value = `${value}Z`;
+  }
+
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
@@ -49,15 +80,18 @@ export function getExpiryRecommendations(pantry, today = new Date(), windowDays 
   const endTime = startTime + windowDays * 24 * 60 * 60 * 1000;
 
   return pantry
-    .map((item, index) => ({ item, date: parseDate(item?.expiryDate), index }))
-    .map(({ item, date, index }) => ({
+    .map(item => ({ item, date: parseDate(item?.expiryDate) }))
+    .map(({ item, date }) => ({
       item,
       date,
       dateTime: date && Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-      index,
     }))
     .filter(({ date, dateTime }) => date && dateTime >= startTime && dateTime <= endTime)
-    .sort((a, b) => a.dateTime - b.dateTime || a.index - b.index)
+    .sort((a, b) => a.dateTime - b.dateTime
+      || compareStableValue(a.item?.id, b.item?.id)
+      || compareStableValue(a.item?.name, b.item?.name)
+      || compareStableValue(a.item?.ingredientId, b.item?.ingredientId)
+      || compareStableValue(a.item?.unit, b.item?.unit))
     .map(({ item }) => item);
 }
 
@@ -71,6 +105,8 @@ export function mergeGroceryItems(items) {
     if (existing) {
       existing.quantity += asQuantity(item?.quantity);
       existing.checked = Boolean(existing.checked || item?.checked);
+      existing.name = compareMetadata(existing.name, item?.name);
+      existing.category = compareMetadata(existing.category, item?.category);
     } else {
       merged.set(key, { ...item, quantity: asQuantity(item?.quantity), checked: Boolean(item?.checked) });
     }
