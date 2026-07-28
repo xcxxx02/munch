@@ -126,7 +126,7 @@ export const recipes = [
     steps: ['Pat the chicken dry and cut it into bite-size pieces.', 'Sear chicken in oil until golden and cooked through.', 'Add grated garlic and ginger; stir for 30 seconds.', 'Pour in teriyaki sauce and simmer until glossy and thick.', 'Steam the bok choy, then serve chicken and sauce over rice with sesame seeds.'] }),
   recipe({
     id: 'mee-goreng',
-    name: 'Mee Goreng Mamak',
+    name: 'Mee Goreng',
     localName: 'Mi Goreng Mamak',
     timeMinutes: 30,
     difficulty: 'medium',

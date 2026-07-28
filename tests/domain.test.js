@@ -409,6 +409,13 @@ test('every curated recipe satisfies the data contract', () => {
   }
 });
 
+test('Mee Goreng keeps its exact display name and Mamak local name', () => {
+  const meeGoreng = recipes.find(recipe => recipe.id === 'mee-goreng');
+
+  assert.equal(meeGoreng.name, 'Mee Goreng');
+  assert.equal(meeGoreng.localName, 'Mi Goreng Mamak');
+});
+
 test('recipe images have an exact JPG contract and a local fallback asset', () => {
   for (const recipe of recipes) {
     assert.equal(recipe.image, `/recipes/${recipe.id}.jpg`);
