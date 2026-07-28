@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import {
   getAvailability,
@@ -389,14 +391,14 @@ test('every curated recipe satisfies the data contract', () => {
 
   assert.ok(recipes.length >= 8);
   for (const recipe of recipes) {
-    for (const field of ['id', 'name', 'localName', 'timeMinutes', 'difficulty', 'dietaryTags', 'image', 'ingredients', 'steps']) {
+    for (const field of ['id', 'name', 'localName', 'timeMinutes', 'difficulty', 'dietaryTags', 'image', 'fallbackImage', 'ingredients', 'steps']) {
       assert.ok(recipe[field] !== undefined && recipe[field] !== null, `${recipe.id} is missing ${field}`);
     }
     assert.equal(recipeIds.has(recipe.id), false, `duplicate recipe id: ${recipe.id}`);
     recipeIds.add(recipe.id);
     assert.equal(mealTypes.includes(recipe.mealType), true, `${recipe.id} has an invalid meal type`);
     assert.ok(recipe.dietaryTags.every(tag => dietaryTags.includes(tag)), `${recipe.id} has an invalid dietary tag`);
-    assert.match(recipe.image, new RegExp(`^/recipes/${recipe.id}\.jpg$`));
+    assert.match(recipe.image, new RegExp(`^/recipes/${recipe.id}\\.jpg$`));
     assert.ok(recipe.steps.length >= 1, `${recipe.id} has no cooking steps`);
     for (const reference of recipe.ingredients) {
       assert.equal(ingredientIds.has(reference.ingredientId), true, `${recipe.id} references ${reference.ingredientId}`);
@@ -407,6 +409,13 @@ test('every curated recipe satisfies the data contract', () => {
   }
 });
 
+test('recipe images have an exact JPG contract and a local fallback asset', () => {
+  for (const recipe of recipes) {
+    assert.equal(recipe.image, `/recipes/${recipe.id}.jpg`);
+    assert.equal(recipe.fallbackImage, '/recipes/placeholder.svg');
+  }
+  assert.equal(existsSync(resolve('public/recipes/placeholder.svg')), true);
+});
 test('ingredient and default pantry records satisfy their shapes', () => {
   const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
   assert.equal(ingredientIds.size, ingredients.length);
@@ -421,6 +430,8 @@ test('ingredient and default pantry records satisfy their shapes', () => {
     }
     assert.equal(typeof item.quantity, 'number');
     assert.equal(ingredientIds.has(item.ingredientId), true, `${item.id} references an unknown ingredient`);
+    const ingredient = ingredients.find(candidate => candidate.id === item.ingredientId);
+    assert.equal(item.unit, ingredient.defaultUnit, `${item.id} must use the catalog unit`);
     if (item.expiryDate !== undefined) assert.match(item.expiryDate, /^\d{4}-\d{2}-\d{2}$/);
   }
 });

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Recipe placeholder</title>
+  <desc id="desc">A warm illustrated plate ready for a recipe photo.</desc>
+  <rect width="640" height="400" rx="32" fill="#f7e4bf"/>
+  <circle cx="320" cy="205" r="126" fill="#fffaf0" stroke="#d8b984" stroke-width="12"/>
+  <circle cx="320" cy="205" r="82" fill="#e7f0e2"/>
+  <path d="M270 215c24-44 76-44 100 0-18 22-32 32-50 32s-32-10-50-32Z" fill="#f47b61"/>
+  <circle cx="287" cy="178" r="9" fill="#6da176"/><circle cx="351" cy="181" r="9" fill="#6da176"/>
+</svg>
