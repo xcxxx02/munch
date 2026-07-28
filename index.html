@@ -5,25 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#fff9ef" />
     <meta name="description" content="Munch makes everyday meal decisions feel a little lighter." />
-    <title>Munch â€” little meals, less thinking</title>
+    <title>Munch — little meals, less thinking</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="wordmark" href="#" data-view="today" aria-label="Munch home"><span class="pot-face" aria-hidden="true">ðŸ²</span><span>munch</span></a>
-        <button class="icon-button" id="profile-button" aria-label="Open profile">â˜¼</button>
+        <a class="wordmark" href="#" data-view="today" aria-label="Munch home"><span class="pot-face" aria-hidden="true">🍲</span><span>munch</span></a>
+        <button class="icon-button" id="profile-button" aria-label="Open profile">☼</button>
       </header>
       <main id="app" aria-live="polite"></main>
       <nav class="bottom-nav" aria-label="Main navigation">
-        <button class="nav-item active" data-view="today"><span aria-hidden="true">âŒ‚</span><small>Today</small></button>
-        <button class="nav-item" data-view="plan"><span aria-hidden="true">â–¦</span><small>Plan</small></button>
-        <button class="nav-item" data-view="recipes"><span aria-hidden="true">â—Œ</span><small>Recipes</small></button>
-        <button class="nav-item" data-view="pantry"><span aria-hidden="true">â™§</span><small>Pantry</small></button>
-        <button class="nav-item" data-view="grocery"><span aria-hidden="true">â˜‘</span><small>Grocery</small><b id="grocery-count" aria-label="Unpurchased grocery items"></b></button>
+        <button class="nav-item active" data-view="today"><span aria-hidden="true">⌂</span><small>Today</small></button>
+        <button class="nav-item" data-view="plan"><span aria-hidden="true">▦</span><small>Plan</small></button>
+        <button class="nav-item" data-view="recipes"><span aria-hidden="true">◌</span><small>Recipes</small></button>
+        <button class="nav-item" data-view="pantry"><span aria-hidden="true">♧</span><small>Pantry</small></button>
+        <button class="nav-item" data-view="grocery"><span aria-hidden="true">☑</span><small>Grocery</small><b id="grocery-count" aria-label="Unpurchased grocery items"></b></button>
       </nav>
     </div>
-    <div class="modal-wrap" id="modal-wrap" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" data-close-modal aria-label="Close">Ã—</button><div id="modal-content"></div></section></div>
+    <div class="modal-wrap" id="modal-wrap" aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1"><button class="modal-close" data-close-modal aria-label="Close">×</button><div id="modal-content"></div></section></div>
     <div class="persistence-notice" id="persistence-notice" role="status" hidden>Changes are only on this device until saving works again.</div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="src/app.js"></script>

@@ -10,12 +10,12 @@ import { renderGrocery } from './screens/grocery.js';
 import { todayISO, ingredientById, label, recipeArt } from './ui.js';
 let currentView = 'today'; let mood = 'quick'; let filters = { search: '', tag: '', stocked: false, time: '' }; let saveFailed = false;
 const fallbackState = { ...DEFAULT_STATE, pantry: defaultPantry.map(item => ({ ...item })) }; let state = loadState(window.localStorage, fallbackState);
-const app = document.querySelector('#app'), modalWrap = document.querySelector('#modal-wrap'), modalContent = document.querySelector('#modal-content'), toast = document.querySelector('#toast'), persistenceNotice = document.querySelector('#persistence-notice');
+const app = document.querySelector('#app'), modalWrap = document.querySelector('#modal-wrap'), modalContent = document.querySelector('#modal-content'), toast = document.querySelector('#toast'), persistenceNotice = document.querySelector('#persistence-notice'); let modalTrigger = null;
 function persist(next) { state = next; saveFailed = !saveState(window.localStorage, state); render(); }
 function dispatch(action) { try { persist(action(state)); } catch (error) { showToast(error.message); } }
 function showToast(message) { toast.textContent = message; toast.classList.add('show'); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400); }
-function openModal(html) { modalContent.innerHTML = html; modalWrap.classList.add('open'); modalWrap.setAttribute('aria-hidden', 'false'); modalContent.querySelector('button, input')?.focus(); }
-function closeModal() { modalWrap.classList.remove('open'); modalWrap.setAttribute('aria-hidden', 'true'); }
+function openModal(html) { modalTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null; modalContent.innerHTML = html; modalWrap.classList.add('open'); modalWrap.setAttribute('aria-hidden', 'false'); (modalContent.querySelector('input, button, [tabindex]:not([tabindex=\"-1\"])') ?? modalWrap.querySelector('.modal-close') ?? modalWrap.querySelector('.modal'))?.focus(); }
+function closeModal() { modalWrap.classList.remove('open'); modalWrap.setAttribute('aria-hidden', 'true'); const trigger = modalTrigger; modalTrigger = null; if (trigger?.isConnected) trigger.focus(); }
 function recipeDetail(recipe, step = 0) {
   const availability = getAvailability(recipe, state.pantry);
   const ingredientRows = recipe.ingredients.map(ref => {
