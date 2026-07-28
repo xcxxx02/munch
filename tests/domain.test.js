@@ -372,3 +372,55 @@ test('mergeGroceryItems treats null and unknown sources as unknown', () => {
   ]);
   assert.equal(Object.hasOwn(onlyUnknown[0], 'source'), false);
 });
+
+import { dietaryTags, defaultPantry, ingredients, mealTypes, recipes } from '../src/data.js';
+
+test('curated recipe data exports the required collections and exact filters', () => {
+  assert.deepEqual(dietaryTags, ['halal', 'vegetarian', 'no-pork', 'no-seafood']);
+  assert.deepEqual(mealTypes, ['breakfast', 'lunch', 'dinner']);
+  assert.ok(Array.isArray(ingredients));
+  assert.ok(Array.isArray(recipes));
+  assert.ok(Array.isArray(defaultPantry));
+});
+
+test('every curated recipe satisfies the data contract', () => {
+  const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
+  const recipeIds = new Set();
+
+  assert.ok(recipes.length >= 8);
+  for (const recipe of recipes) {
+    for (const field of ['id', 'name', 'localName', 'timeMinutes', 'difficulty', 'dietaryTags', 'image', 'ingredients', 'steps']) {
+      assert.ok(recipe[field] !== undefined && recipe[field] !== null, `${recipe.id} is missing ${field}`);
+    }
+    assert.equal(recipeIds.has(recipe.id), false, `duplicate recipe id: ${recipe.id}`);
+    recipeIds.add(recipe.id);
+    assert.equal(mealTypes.includes(recipe.mealType), true, `${recipe.id} has an invalid meal type`);
+    assert.ok(recipe.dietaryTags.every(tag => dietaryTags.includes(tag)), `${recipe.id} has an invalid dietary tag`);
+    assert.match(recipe.image, new RegExp(`^/recipes/${recipe.id}\.jpg$`));
+    assert.ok(recipe.steps.length >= 1, `${recipe.id} has no cooking steps`);
+    for (const reference of recipe.ingredients) {
+      assert.equal(ingredientIds.has(reference.ingredientId), true, `${recipe.id} references ${reference.ingredientId}`);
+      assert.equal(typeof reference.quantity, 'number');
+      assert.ok(reference.quantity > 0);
+      assert.equal(typeof reference.unit, 'string');
+    }
+  }
+});
+
+test('ingredient and default pantry records satisfy their shapes', () => {
+  const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
+  assert.equal(ingredientIds.size, ingredients.length);
+  for (const ingredient of ingredients) {
+    for (const field of ['id', 'name', 'localName', 'icon', 'category', 'defaultUnit']) {
+      assert.equal(typeof ingredient[field], 'string', `${ingredient.id} is missing ${field}`);
+    }
+  }
+  for (const item of defaultPantry) {
+    for (const field of ['id', 'ingredientId', 'name', 'icon', 'unit']) {
+      assert.equal(typeof item[field], 'string', `${item.id} is missing ${field}`);
+    }
+    assert.equal(typeof item.quantity, 'number');
+    assert.equal(ingredientIds.has(item.ingredientId), true, `${item.id} references an unknown ingredient`);
+    if (item.expiryDate !== undefined) assert.match(item.expiryDate, /^\d{4}-\d{2}-\d{2}$/);
+  }
+});
