@@ -7,53 +7,85 @@ import {
   mergeGroceryItems,
 } from '../src/domain.js';
 
-test('getAvailability reports partial availability for egg and tomato', () => {
+test('getAvailability marks a recipe complete when every ingredient is fully stocked', () => {
   const recipe = {
     ingredients: [
-      { name: 'Egg', quantity: 2 },
-      { name: 'Tomato', quantity: 3 },
+      { ingredientId: 'egg', name: 'Eggs', quantity: 2, unit: 'pieces', category: 'Dairy' },
+      { ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: 'Produce' },
     ],
   };
   const pantry = [
-    { name: 'Egg', quantity: 1 },
-    { name: 'Tomato', quantity: 1 },
+    { ingredientId: 'egg', name: 'Eggs', quantity: 2, unit: 'pieces', category: 'Dairy' },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 4, unit: 'pieces', category: 'Produce' },
   ];
 
   assert.deepEqual(getAvailability(recipe, pantry), {
-    available: [
-      { name: 'Egg', required: 2, stocked: 1, remaining: 1 },
-      { name: 'Tomato', required: 3, stocked: 1, remaining: 2 },
-    ],
-    missing: [
-      { name: 'Egg', quantity: 1 },
-      { name: 'Tomato', quantity: 2 },
-    ],
-    complete: false,
+    availableCount: 2,
+    totalCount: 2,
+    missing: [],
   });
 });
 
-test('getExpiryRecommendations returns pantry items expiring within 3 days', () => {
+test('getAvailability reports zero and partial stock with the remaining quantities', () => {
+  const recipe = {
+    ingredients: [
+      { ingredientId: 'egg', name: 'Eggs', quantity: 2, unit: 'pieces', category: 'Dairy' },
+      { ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: 'Produce' },
+    ],
+  };
   const pantry = [
-    { name: 'Tomato', expiryDate: '2026-07-29' },
-    { name: 'Egg', expiryDate: '2026-07-31' },
-    { name: 'Rice', expiryDate: '2026-08-01' },
+    { ingredientId: 'egg', name: 'Eggs', quantity: 0, unit: 'pieces', category: 'Dairy' },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 1, unit: 'pieces', category: 'Produce' },
+  ];
+
+  assert.deepEqual(getAvailability(recipe, pantry), {
+    availableCount: 0,
+    totalCount: 2,
+    missing: [
+      { ingredientId: 'egg', quantity: 2, unit: 'pieces' },
+      { ingredientId: 'tomato', quantity: 2, unit: 'pieces' },
+    ],
+  });
+});
+
+test('getExpiryRecommendations ignores items without expiry and sorts soonest first', () => {
+  const today = new Date('2026-07-28T00:00:00.000Z');
+  const pantry = [
+    { ingredientId: 'rice', name: 'Rice', quantity: 1, unit: 'kg', category: 'Grains' },
+    { ingredientId: 'egg', name: 'Eggs', quantity: 6, unit: 'pieces', category: 'Dairy', expiryDate: '2026-07-30' },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 2, unit: 'pieces', category: 'Produce', expiryDate: '2026-07-29' },
   ];
 
   assert.deepEqual(
-    getExpiryRecommendations(pantry, new Date('2026-07-28T00:00:00Z'), 3),
-    [pantry[0], pantry[1]],
+    getExpiryRecommendations(pantry, today, 3).map(item => item.ingredientId),
+    ['tomato', 'egg'],
   );
 });
 
-test('mergeGroceryItems combines duplicates and preserves checked state', () => {
+test('getExpiryRecommendations includes the exact three-day boundary but excludes later dates', () => {
+  const today = new Date('2026-07-28T00:00:00.000Z');
+  const pantry = [
+    { ingredientId: 'milk', name: 'Milk', quantity: 1, unit: 'litre', category: 'Dairy', expiryDate: '2026-07-31' },
+    { ingredientId: 'rice', name: 'Rice', quantity: 1, unit: 'kg', category: 'Grains', expiryDate: '2026-08-01' },
+  ];
+
+  assert.deepEqual(
+    getExpiryRecommendations(pantry, today, 3).map(item => item.ingredientId),
+    ['milk'],
+  );
+});
+
+test('mergeGroceryItems merges only matching ingredientId and unit pairs', () => {
   const items = [
-    { name: 'Tomato', quantity: 2, category: 'Produce', checked: true },
-    { name: 'tomato', quantity: 1, category: 'Produce', checked: false },
-    { name: 'Egg', quantity: 6, category: 'Dairy', checked: false },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 2, unit: 'pieces', category: 'Produce', checked: true },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 1, unit: 'pieces', category: 'Produce', checked: false },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 0.5, unit: 'kg', category: 'Produce', checked: false },
+    { ingredientId: 'egg', name: 'Eggs', quantity: 6, unit: 'pieces', category: 'Dairy', checked: false },
   ];
 
   assert.deepEqual(mergeGroceryItems(items), [
-    { name: 'Tomato', quantity: 3, category: 'Produce', checked: true },
-    { name: 'Egg', quantity: 6, category: 'Dairy', checked: false },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: 'Produce', checked: true },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 0.5, unit: 'kg', category: 'Produce', checked: false },
+    { ingredientId: 'egg', name: 'Eggs', quantity: 6, unit: 'pieces', category: 'Dairy', checked: false },
   ]);
 });
