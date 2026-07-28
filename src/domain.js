@@ -44,13 +44,20 @@ export function getExpiryRecommendations(pantry, today = new Date(), windowDays 
   const start = parseDate(today);
   if (!start || !Array.isArray(pantry) || !Number.isFinite(windowDays)) return [];
 
-  const startTime = start.getTime();
+  const startDate = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  const startTime = startDate.getTime();
   const endTime = startTime + windowDays * 24 * 60 * 60 * 1000;
 
   return pantry
     .map((item, index) => ({ item, date: parseDate(item?.expiryDate), index }))
-    .filter(({ date }) => date && date.getTime() >= startTime && date.getTime() <= endTime)
-    .sort((a, b) => a.date.getTime() - b.date.getTime() || a.index - b.index)
+    .map(({ item, date, index }) => ({
+      item,
+      date,
+      dateTime: date && Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+      index,
+    }))
+    .filter(({ date, dateTime }) => date && dateTime >= startTime && dateTime <= endTime)
+    .sort((a, b) => a.dateTime - b.dateTime || a.index - b.index)
     .map(({ item }) => item);
 }
 

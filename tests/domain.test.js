@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   getAvailability,
   getExpiryRecommendations,
+  createMealPlanEntry,
   mergeGroceryItems,
 } from '../src/domain.js';
 
@@ -96,6 +97,36 @@ test('getExpiryRecommendations includes the exact three-day boundary but exclude
   );
 });
 
+test('getExpiryRecommendations includes items expiring later on today\'s calendar date', () => {
+  const today = new Date('2026-07-28T15:00:00.000Z');
+  const pantry = [
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 2, unit: 'pieces', category: 'Produce', expiryDate: '2026-07-28' },
+  ];
+
+  assert.deepEqual(
+    getExpiryRecommendations(pantry, today, 0).map(item => item.ingredientId),
+    ['tomato'],
+  );
+});
+
+test('createMealPlanEntry normalizes valid breakfast, lunch and dinner entries', () => {
+  assert.deepEqual(createMealPlanEntry({ date: '2026-07-28T15:00:00.000Z', mealType: 'breakfast', recipeId: 'r1' }), {
+    id: '2026-07-28-breakfast', date: '2026-07-28', mealType: 'breakfast', recipeId: 'r1',
+  });
+  assert.deepEqual(createMealPlanEntry({ date: '2026-07-28', mealType: 'lunch', recipeId: 'r2' }), {
+    id: '2026-07-28-lunch', date: '2026-07-28', mealType: 'lunch', recipeId: 'r2',
+  });
+  assert.deepEqual(createMealPlanEntry({ date: '2026-07-28', mealType: 'dinner', recipeId: 'r3' }), {
+    id: '2026-07-28-dinner', date: '2026-07-28', mealType: 'dinner', recipeId: 'r3',
+  });
+});
+
+test('createMealPlanEntry rejects invalid meal types with a clear error', () => {
+  assert.throws(
+    () => createMealPlanEntry({ date: '2026-07-28', mealType: 'snack', recipeId: 'r1' }),
+    { message: 'mealType must be breakfast, lunch or dinner' },
+  );
+});
 test('mergeGroceryItems merges only matching ingredientId and unit pairs', () => {
   const items = [
     { ingredientId: 'tomato', name: 'Tomatoes', quantity: 1, unit: 'pieces', category: 'Produce', checked: false },
