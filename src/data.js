@@ -104,7 +104,7 @@ export const recipes = [
       { ingredientId: 'salt', quantity: 4, unit: 'grams' },
       { ingredientId: 'sugar', quantity: 3, unit: 'grams' },
     ],
-    steps: ['Beat eggs with half the salt and set aside.', 'SautÃ© garlic in oil, add chopped tomatoes and cook until soft.', 'Season tomatoes with remaining salt and sugar.', 'Pour in eggs and gently fold until softly set.', 'Spoon over hot rice and finish with sliced spring onion.'] }),
+    steps: ['Beat eggs with half the salt and set aside.', 'Sauté garlic in oil, add chopped tomatoes and cook until soft.', 'Season tomatoes with remaining salt and sugar.', 'Pour in eggs and gently fold until softly set.', 'Spoon over hot rice and finish with sliced spring onion.'] }),
   recipe({
     id: 'chicken-teriyaki-rice',
     name: 'Chicken Teriyaki Rice',

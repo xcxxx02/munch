@@ -387,9 +387,22 @@ test('curated recipe data exports the required collections and exact filters', (
 
 test('every curated recipe satisfies the data contract', () => {
   const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
+  const ingredientById = new Map(ingredients.map(ingredient => [ingredient.id, ingredient]));
   const recipeIds = new Set();
 
-  assert.ok(recipes.length >= 8);
+  assert.deepEqual(
+    recipes.map(recipe => [recipe.id, recipe.name]),
+    [
+      ['nasi-lemak', 'Nasi Lemak'],
+      ['nasi-goreng-kampung', 'Nasi Goreng Kampung'],
+      ['tomato-egg-rice', 'Tomato Egg Rice'],
+      ['chicken-teriyaki-rice', 'Chicken Teriyaki Rice'],
+      ['mee-goreng', 'Mee Goreng'],
+      ['chicken-porridge', 'Chicken Porridge'],
+      ['vegetable-fried-rice', 'Vegetable Fried Rice'],
+      ['roti-telur', 'Roti Telur'],
+    ],
+  );
   for (const recipe of recipes) {
     for (const field of ['id', 'name', 'localName', 'timeMinutes', 'difficulty', 'dietaryTags', 'image', 'fallbackImage', 'ingredients', 'steps']) {
       assert.ok(recipe[field] !== undefined && recipe[field] !== null, `${recipe.id} is missing ${field}`);
@@ -402,9 +415,11 @@ test('every curated recipe satisfies the data contract', () => {
     assert.ok(recipe.steps.length >= 1, `${recipe.id} has no cooking steps`);
     for (const reference of recipe.ingredients) {
       assert.equal(ingredientIds.has(reference.ingredientId), true, `${recipe.id} references ${reference.ingredientId}`);
+      const ingredient = ingredientById.get(reference.ingredientId);
       assert.equal(typeof reference.quantity, 'number');
       assert.ok(reference.quantity > 0);
       assert.equal(typeof reference.unit, 'string');
+      assert.equal(reference.unit, ingredient.defaultUnit, `${recipe.id} must use ${reference.ingredientId}'s catalog unit`);
     }
   }
 });
