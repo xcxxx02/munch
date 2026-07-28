@@ -375,7 +375,7 @@ test('mergeGroceryItems treats null and unknown sources as unknown', () => {
   assert.equal(Object.hasOwn(onlyUnknown[0], 'source'), false);
 });
 
-import { dietaryTags, defaultPantry, ingredients, mealTypes, recipes } from '../src/data.js';
+import { dietaryTags, defaultPantry, ingredients, mealTypes, recipes, resolveAssetPath } from '../src/data.js';
 
 test('curated recipe data exports the required collections and exact filters', () => {
   assert.deepEqual(dietaryTags, ['halal', 'vegetarian', 'no-pork', 'no-seafood']);
@@ -463,6 +463,18 @@ test('recipe images have an exact JPG contract and a local fallback asset', () =
   }
   assert.equal(existsSync(resolve('public/recipes/placeholder.svg')), true);
 });
+test('recipe asset paths resolve from both local previews and hosted app bases', () => {
+  assert.equal(
+    resolveAssetPath('recipes/nasi-lemak.jpg', 'file:///C:/projects/munch/index.html'),
+    'file:///C:/projects/munch/public/recipes/nasi-lemak.jpg',
+  );
+  assert.equal(
+    resolveAssetPath('recipes/nasi-lemak.jpg', 'https://example.test/munch/index.html'),
+    'https://example.test/munch/recipes/nasi-lemak.jpg',
+  );
+  assert.equal(resolveAssetPath('recipes/placeholder.svg'), '/recipes/placeholder.svg');
+});
+
 test('ingredient and default pantry records satisfy their shapes', () => {
   const ingredientIds = new Set(ingredients.map(ingredient => ingredient.id));
   assert.equal(ingredientIds.size, ingredients.length);

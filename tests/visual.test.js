@@ -27,7 +27,7 @@ test('generated recipe assets and declared fallback are present', () => {
   for (const asset of ['nasi-lemak.jpg', 'tomato-egg-rice.jpg', 'mee-goreng.jpg', 'chicken-porridge.jpg', 'placeholder.svg']) {
     assert.equal(existsSync(new URL(`../public/recipes/${asset}`, import.meta.url)), true, asset);
   }
-  assert.match(data, /fallbackImage: FALLBACK_RECIPE_IMAGE/);
+  assert.match(data, /fallbackImage: resolveAssetPath\(FALLBACK_RECIPE_IMAGE\)/);
 });
 
 test('modal source contract provides useful focus and restores its opener', () => {

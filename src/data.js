@@ -36,12 +36,20 @@ export const ingredients = [
   { id: 'water', name: 'Water', localName: 'Air', icon: '💧', category: 'Pantry', defaultUnit: 'millilitres' },
 ];
 
-const FALLBACK_RECIPE_IMAGE = '/recipes/placeholder.svg';
+const FALLBACK_RECIPE_IMAGE = 'recipes/placeholder.svg';
+
+export const resolveAssetPath = (path, base = typeof document !== 'undefined' ? document.baseURI : undefined) => {
+  if (!base) return `/${path}`;
+
+  const baseUrl = new URL(base);
+  const assetPath = baseUrl.protocol === 'file:' ? `public/${path}` : path;
+  return new URL(assetPath, baseUrl).href;
+};
 
 const recipe = details => ({
   ...details,
-  image: `/recipes/${details.id}.jpg`,
-  fallbackImage: FALLBACK_RECIPE_IMAGE,
+  image: resolveAssetPath(`recipes/${details.id}.jpg`),
+  fallbackImage: resolveAssetPath(FALLBACK_RECIPE_IMAGE),
 });
 
 export const recipes = [
