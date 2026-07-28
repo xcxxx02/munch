@@ -81,7 +81,8 @@ export function toggleGroceryItem(state, groceryId) {
   const grocery = state.grocery.map(item => {
     if (typeof item?.id !== 'string' || item.id.trim() !== normalizedId) return item;
     changed = true;
-    return { ...item, checked: !item.checked };
+    const checked = !item.checked;
+    return { ...item, checked, ...(item.source === 'mixed' ? { manualChecked: checked, recipeChecked: checked } : {}) };
   });
   return changed ? { ...state, grocery } : state;
 }
@@ -122,7 +123,9 @@ export function reconcilePlannedGroceries(state, recipes, ingredients = []) {
   assertState(state);
   if (!Array.isArray(recipes)) throw new Error('recipes must be an array');
   const recipeItems = [];
-  const checkedRecipeItems = new Map(state.grocery.filter(item => item.source === 'recipe').map(item => [item.ingredientId + '|' + item.unit, Boolean(item.checked)]));
+  const checkedRecipeItems = new Map(state.grocery
+    .filter(item => item.source === 'recipe' || item.source === 'mixed')
+    .map(item => [item.ingredientId + '|' + item.unit, item.source === 'mixed' ? Boolean(item.recipeChecked) : Boolean(item.checked)]));
   for (const entry of state.mealPlan) {
     const recipe = recipes.find(candidate => candidate?.id === entry?.recipeId);
     if (!recipe) continue;
@@ -131,7 +134,11 @@ export function reconcilePlannedGroceries(state, recipes, ingredients = []) {
       recipeItems.push({ ...missing, id: 'grocery-' + missing.ingredientId + '-' + missing.unit, name: catalog.get(missing.ingredientId)?.name, category: catalog.get(missing.ingredientId)?.category, checked: checkedRecipeItems.get(missing.ingredientId + '|' + missing.unit) || false, source: 'recipe' });
     }
   }
-  const preserved = state.grocery.map(normalizeGroceryItem).filter(item => item.source !== 'recipe');
+  const preserved = state.grocery.map(normalizeGroceryItem)
+    .filter(item => item.source !== 'recipe')
+    .map(item => item.source === 'mixed'
+      ? { ...item, quantity: item.manualQuantity, checked: Boolean(item.manualChecked), source: 'manual' }
+      : item);
   return { ...state, grocery: mergeGroceryItems([...preserved, ...recipeItems]) };
 }
 

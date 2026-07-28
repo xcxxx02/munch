@@ -37,6 +37,17 @@ function asGrocerySource(value) {
   return GROCERY_SOURCES.has(value) ? value : undefined;
 }
 
+function contribution(item, source) {
+  const quantityKey = source + 'Quantity';
+  if (typeof item?.[quantityKey] === 'number' && Number.isFinite(item[quantityKey])) return item[quantityKey];
+  return item?.source === source ? asQuantity(item?.quantity) : 0;
+}
+
+function contributionChecked(item, source) {
+  const checkedKey = source + 'Checked';
+  return item?.[checkedKey] === undefined ? (item?.source === source && Boolean(item?.checked)) : Boolean(item[checkedKey]);
+}
+
 function parseDate(value) {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
@@ -141,6 +152,10 @@ export function mergeGroceryItems(items) {
     const key = JSON.stringify([ingredientId, unit]);
     const existing = merged.get(key);
     if (existing) {
+      const existingRecipeQuantity = contribution(existing, 'recipe');
+      const existingManualQuantity = contribution(existing, 'manual');
+      const existingRecipeChecked = contributionChecked(existing, 'recipe');
+      const existingManualChecked = contributionChecked(existing, 'manual');
       existing.quantity += asQuantity(item?.quantity);
       existing.checked = Boolean(existing.checked || item?.checked);
       existing.name = compareMetadata(existing.name, item?.name);
@@ -151,6 +166,12 @@ export function mergeGroceryItems(items) {
       const itemSource = asGrocerySource(item?.source);
       if (itemSource !== undefined && (existing.source === undefined || existing.source !== itemSource)) {
         existing.source = existing.source === undefined ? itemSource : 'mixed';
+      }
+      if (existing.source === 'mixed') {
+        existing.recipeQuantity = existingRecipeQuantity + contribution(item, 'recipe');
+        existing.manualQuantity = existingManualQuantity + contribution(item, 'manual');
+        existing.recipeChecked = existingRecipeChecked || contributionChecked(item, 'recipe');
+        existing.manualChecked = existingManualChecked || contributionChecked(item, 'manual');
       }
     } else {
       const mergedItem = {
@@ -164,6 +185,12 @@ export function mergeGroceryItems(items) {
       if (hasRequiredKeyValue(item?.id)) mergedItem.id = item.id;
       const source = asGrocerySource(item?.source);
       if (source !== undefined) mergedItem.source = source;
+      if (source === 'mixed') {
+        mergedItem.recipeQuantity = contribution(item, 'recipe');
+        mergedItem.manualQuantity = contribution(item, 'manual');
+        mergedItem.recipeChecked = contributionChecked(item, 'recipe');
+        mergedItem.manualChecked = contributionChecked(item, 'manual');
+      }
       merged.set(key, mergedItem);
     }
   }

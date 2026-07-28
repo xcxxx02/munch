@@ -77,7 +77,7 @@ test('merges missing ingredients into grocery state', () => {
 
   assert.deepEqual(next.grocery, [{
     ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: undefined,
-    checked: false, id: 'g1', source: 'mixed',
+    checked: false, id: 'g1', source: 'mixed', recipeQuantity: 2, manualQuantity: 1, recipeChecked: false, manualChecked: false,
   }]);
   assert.equal(state.grocery[0].quantity, 1);
 });
@@ -202,4 +202,37 @@ test('addManualGroceryItem creates a stable manual grocery row', () => {
     id: 'manual-limes-pieces', ingredientId: 'limes', name: 'Limes', quantity: 2,
     unit: 'pieces', category: 'Produce', checked: false, source: 'manual',
   });
+});
+test('reconcilePlannedGroceries removes only the recipe contribution from a collision', () => {
+  const recipes = [{ id: 'recipe', ingredients: [{ ingredientId: 'egg', quantity: 2, unit: 'pieces' }] }];
+  let state = { ...DEFAULT_STATE, pantry: [], mealPlan: [{ id: 'meal', date: '2026-07-29', mealType: 'dinner', recipeId: 'recipe' }] };
+  state = reconcilePlannedGroceries(state, recipes);
+  state = addManualGroceryItem(state, { name: 'Egg', quantity: 4, unit: 'pieces' });
+  state = { ...state, mealPlan: [] };
+  const next = reconcilePlannedGroceries(state, recipes);
+
+  assert.deepEqual(next.grocery, [{
+    id: 'grocery-egg-pieces', ingredientId: 'egg', name: 'Egg', quantity: 4,
+    unit: 'pieces', category: 'Kitchen', checked: false, source: 'manual',
+  }]);
+});
+
+test('reconcilePlannedGroceries replaces only the recipe contribution in a collision', () => {
+  const recipes = [
+    { id: 'old', ingredients: [{ ingredientId: 'egg', quantity: 2, unit: 'pieces' }] },
+    { id: 'new', ingredients: [{ ingredientId: 'egg', quantity: 5, unit: 'pieces' }] },
+  ];
+  let state = { ...DEFAULT_STATE, pantry: [], mealPlan: [{ id: 'meal', date: '2026-07-29', mealType: 'dinner', recipeId: 'old' }] };
+  state = reconcilePlannedGroceries(state, recipes);
+  state = addManualGroceryItem(state, { name: 'Egg', quantity: 4, unit: 'pieces' });
+  state = { ...state, mealPlan: [{ id: 'meal', date: '2026-07-29', mealType: 'dinner', recipeId: 'new' }] };
+  state.grocery[0].checked = true;
+  state.grocery[0].manualChecked = true;
+  const next = reconcilePlannedGroceries(state, recipes);
+
+  assert.deepEqual(next.grocery.map(item => ({
+    ingredientId: item.ingredientId, quantity: item.quantity, source: item.source, checked: item.checked,
+  })), [{ ingredientId: 'egg', quantity: 9, source: 'mixed', checked: true }]);
+  assert.equal(next.grocery[0].recipeQuantity, 5);
+  assert.equal(next.grocery[0].manualQuantity, 4);
 });

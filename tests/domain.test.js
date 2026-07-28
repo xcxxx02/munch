@@ -290,7 +290,7 @@ test('mergeGroceryItems applies the complete supported field policy in either in
     { id: 'first', source: 'manual', ingredientId: 'tomato', name: 'Zucchini tomatoes', quantity: 1, unit: 'pieces', category: 'Vegetable', checked: false },
     { id: 'second', source: 'recipe', ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 2, unit: 'pieces', category: 'Fruit', checked: true },
   ];
-  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: true, id: 'first', source: 'mixed' }];
+  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: true, id: 'first', source: 'mixed', recipeQuantity: 2, manualQuantity: 1, recipeChecked: true, manualChecked: false }];
   assert.deepEqual(mergeGroceryItems(items), expected);
   assert.deepEqual(mergeGroceryItems([...items].reverse()), expected);
 });
