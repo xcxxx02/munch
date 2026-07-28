@@ -37,7 +37,7 @@ function parseDate(value) {
     const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:$|([T ])(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|[+-]\d{2}(?::?\d{2})?)?$)/.exec(value);
     if (!isoDate) return null;
 
-    const [, yearText, monthText, dayText, separator, hoursText, minutesText, secondsText = '0', fraction, timezone] = isoDate;
+    const [, yearText, monthText, dayText, separator, hoursText, minutesText, secondsText = '00', fraction, timezone] = isoDate;
     const year = Number(yearText);
     const month = Number(monthText);
     const day = Number(dayText);

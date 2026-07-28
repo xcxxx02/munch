@@ -160,6 +160,17 @@ test('createMealPlanEntry treats timezone-less datetimes as UTC', () => {
   );
 });
 
+test('createMealPlanEntry accepts valid ISO datetimes without seconds', () => {
+  assert.equal(
+    createMealPlanEntry({ date: '2026-07-28T12:34Z', mealType: 'dinner', recipeId: 'r5' }).date,
+    '2026-07-28',
+  );
+  assert.equal(
+    createMealPlanEntry({ date: '2026-07-28T12:34+05:30', mealType: 'dinner', recipeId: 'r6' }).date,
+    '2026-07-28',
+  );
+});
+
 test('createMealPlanEntry rejects invalid calendar components in timezone-less datetimes', () => {
   assert.throws(
     () => createMealPlanEntry({ date: '2026-02-30T12:00:00', mealType: 'dinner', recipeId: 'r5' }),
