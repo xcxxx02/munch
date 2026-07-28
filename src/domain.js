@@ -123,8 +123,10 @@ export function mergeGroceryItems(items) {
       if (hasRequiredKeyValue(existing.id) || hasRequiredKeyValue(item?.id)) {
         existing.id = compareMetadata(existing.id, item?.id);
       }
-      if (existing.source !== undefined || item?.source !== undefined) {
-        existing.source = existing.source === item?.source ? existing.source : 'mixed';
+      const existingSourceKnown = existing.source !== undefined;
+      const itemSourceKnown = item?.source !== undefined;
+      if (itemSourceKnown && (!existingSourceKnown || existing.source !== item.source)) {
+        existing.source = existingSourceKnown ? 'mixed' : item.source;
       }
     } else {
       const mergedItem = {

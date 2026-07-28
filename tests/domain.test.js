@@ -295,3 +295,20 @@ test('mergeGroceryItems preserves a shared source and marks conflicting sources 
   assert.equal(mixed[0].id, 'manual-1');
   assert.equal(mixed[0].source, 'mixed');
 });
+
+test('mergeGroceryItems ignores missing sources when preserving known sources', () => {
+  const manualAndMissing = [
+    { source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+    { ingredientId: 'egg', unit: 'pieces', quantity: 2 },
+  ];
+  const expected = [{ ingredientId: 'egg', name: undefined, quantity: 3, unit: 'pieces', category: undefined, checked: false, source: 'manual' }];
+  assert.deepEqual(mergeGroceryItems(manualAndMissing), expected);
+  assert.deepEqual(mergeGroceryItems([...manualAndMissing].reverse()), expected);
+
+  const recipeAndManual = [
+    { source: 'recipe', ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+    { source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 2 },
+  ];
+  assert.equal(mergeGroceryItems(recipeAndManual)[0].source, 'mixed');
+  assert.equal(mergeGroceryItems([...recipeAndManual].reverse())[0].source, 'mixed');
+});
