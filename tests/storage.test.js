@@ -1,4 +1,4 @@
-import test from 'node:test';
+﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { clearState, loadState, saveState } from '../src/storage.js';
@@ -6,6 +6,8 @@ import {
   DEFAULT_STATE,
   addMissingIngredients,
   addPantryItem,
+  updatePantryItem,
+  removePantryItem,
   addRecipeToPlan,
   toggleGroceryItem,
 } from '../src/state.js';
@@ -129,7 +131,7 @@ test('actions reject invalid inputs without changing state', () => {
   assert.throws(() => toggleGroceryItem(state, '  '), { message: 'groceryId must be a non-blank string' });
   assert.throws(() => addMissingIngredients(state, [{ ingredientId: 'egg' }]), { message: 'ingredientId and unit are required for grocery items' });
   assert.throws(() => addMissingIngredients(state, [{ ingredientId: 'egg', unit: '   ' }]), { message: 'ingredientId and unit are required for grocery items' });
-  assert.deepEqual(addMissingIngredients(state, [{ ingredientId: ' egg ', unit: ' pieces ', quantity: 1 }]).grocery[0], { ingredientId: 'egg', name: undefined, quantity: 1, unit: 'pieces', category: undefined, checked: false, source: 'recipe' });
+  assert.deepEqual(addMissingIngredients(state, [{ ingredientId: ' egg ', unit: ' pieces ', quantity: 1 }]).grocery[0], { ingredientId: 'egg', name: undefined, quantity: 1, unit: 'pieces', category: undefined, checked: false, id: 'grocery-egg-pieces', source: 'recipe' });
   assert.deepEqual(state, { ...DEFAULT_STATE, pantry: [], grocery: [], mealPlan: [] });
 });
 
@@ -161,4 +163,13 @@ test('loadState discards meal-plan records with malformed IDs and trims valid ID
   ] };
   const loaded = loadState(memoryStorage({ 'munch:v1': JSON.stringify(persisted) }), DEFAULT_STATE);
   assert.deepEqual(loaded.mealPlan, [{ id: 'plan-1', date: '2026-07-29', mealType: 'dinner', recipeId: 'r1' }]);
+});
+
+test('recipe grocery additions receive stable ids and pantry details can be edited or removed', () => {
+  const state = { ...DEFAULT_STATE, pantry: [{ id: 'p1', ingredientId: 'egg', quantity: 2, unit: 'pieces' }] };
+  const grocery = addMissingIngredients(state, [{ ingredientId: 'tomato', unit: 'pieces', quantity: 1, source: 'recipe' }]);
+  assert.equal(grocery.grocery[0].id, 'grocery-tomato-pieces');
+  const edited = updatePantryItem(state, 'p1', { quantity: 4, expiryDate: '2026-08-01' });
+  assert.deepEqual(edited.pantry[0], { id: 'p1', ingredientId: 'egg', quantity: 4, unit: 'pieces', expiryDate: '2026-08-01' });
+  assert.deepEqual(removePantryItem(edited, 'p1').pantry, []);
 });

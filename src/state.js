@@ -1,4 +1,4 @@
-import { createMealPlanEntry, mergeGroceryItems } from './domain.js';
+﻿import { createMealPlanEntry, mergeGroceryItems } from './domain.js';
 
 export const DEFAULT_STATE = {
   version: 1,
@@ -54,6 +54,26 @@ export function addPantryItem(state, item) {
   return { ...state, pantry: [...state.pantry, pantryItem] };
 }
 
+export function updatePantryItem(state, pantryId, changes) {
+  assertState(state);
+  const id = normalizeIdentifier(pantryId, 'pantryId must be a non-blank string');
+  requireRecord(changes, 'pantry changes must be an object');
+  let changed = false;
+  const pantry = state.pantry.map(item => {
+    if (item?.id !== id) return item;
+    changed = true;
+    if (changes.quantity !== undefined && (!Number.isFinite(Number(changes.quantity)) || Number(changes.quantity) < 0)) throw new Error('quantity must be a non-negative number');
+    if (changes.expiryDate !== undefined && changes.expiryDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(changes.expiryDate)) throw new Error('expiryDate must be a valid date');
+    return { ...item, ...changes, id, ingredientId: item.ingredientId, ...(changes.quantity === undefined ? {} : { quantity: Number(changes.quantity) }) };
+  });
+  return changed ? { ...state, pantry } : state;
+}
+
+export function removePantryItem(state, pantryId) {
+  assertState(state);
+  const id = normalizeIdentifier(pantryId, 'pantryId must be a non-blank string');
+  return { ...state, pantry: state.pantry.filter(item => item?.id !== id) };
+}
 export function toggleGroceryItem(state, groceryId) {
   assertState(state);
   const normalizedId = normalizeIdentifier(groceryId, 'groceryId must be a non-blank string');
@@ -90,7 +110,10 @@ export function addMissingIngredients(state, missing) {
   if (!Array.isArray(missing)) throw new Error('missing ingredients must be an array');
   const additions = missing.map(item => {
     requireRecord(item, 'missing ingredient must be an object');
-    return { ...normalizeGroceryItem(item), source: item.source ?? 'recipe' };
+    const normalized = normalizeGroceryItem(item);
+    const source = item.source ?? 'recipe';
+    if (normalized.id === undefined && source === 'recipe') normalized.id = 'grocery-' + normalized.ingredientId + '-' + normalized.unit;
+    return { ...normalized, source };
   });
   return { ...state, grocery: mergeGroceryItems([...state.grocery.map(normalizeGroceryItem), ...additions]) };
 }
