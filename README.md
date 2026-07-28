@@ -1,14 +1,15 @@
 # Munch
 
-Munch is a small, mobile-first meal planner and grocery list web app. It connects recipes, pantry ingredients and shopping into one light kitchen companion.
+Munch is a mobile-first local-first meal planner web app. It connects recipes, pantry ingredients and shopping into one light kitchen companion.
 
-## Current MVP
+The browser entry point is `index.html`, which loads the application as an ES module from `src/app.js`.
 
-- Today view with a daily recipe pick
-- Recipe library and recipe details
-- Pantry ingredient cards with local persistence
-- Grocery list grouped by category
-- Add pantry items and check off groceries
-- Mobile-first responsive layout
+## Tests
 
-Open `index.html` directly in a browser. Data is stored locally in the browser with `localStorage`; there is no native app packaging, backend or app-store step.
+Install dependencies if needed, then run the Node test suite with:
+
+```sh
+npm test
+```
+
+The domain tests describe the behavior being built; the domain module is not implemented yet.
