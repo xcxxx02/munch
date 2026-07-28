@@ -142,16 +142,6 @@ test('mergeGroceryItems merges only matching ingredientId and unit pairs', () =>
   ]);
 });
 
-test('getExpiryRecommendations uses id then name to break same-date ties', () => {
-  const today = new Date('2026-07-28T00:00:00.000Z');
-  const pantry = [
-    { id: 'b', ingredientId: 'banana', name: 'Bananas', expiryDate: '2026-07-29' },
-    { id: 'a', ingredientId: 'banana-green', name: 'Bananas', expiryDate: '2026-07-29' },
-    { id: 'a', ingredientId: 'apple', name: 'Apples', expiryDate: '2026-07-29' },
-  ];
-
-  assert.deepEqual(getExpiryRecommendations(pantry, today, 3).map(item => item.id), ['a', 'a', 'b']);
-});
 
 test('mergeGroceryItems chooses duplicate metadata deterministically', () => {
   const items = [
@@ -168,4 +158,49 @@ test('createMealPlanEntry treats timezone-less datetimes as UTC', () => {
     createMealPlanEntry({ date: '2026-07-28T23:30:00', mealType: 'dinner', recipeId: 'r4' }).date,
     '2026-07-28',
   );
+});
+
+test('createMealPlanEntry rejects invalid calendar components in timezone-less datetimes', () => {
+  assert.throws(
+    () => createMealPlanEntry({ date: '2026-02-30T12:00:00', mealType: 'dinner', recipeId: 'r5' }),
+    { message: 'date must be a valid date' },
+  );
+});
+
+test('getExpiryRecommendations breaks same-date ties by id', () => {
+  const pantry = [
+    { id: 'b', name: 'Same', expiryDate: '2026-07-29' },
+    { id: 'a', name: 'Same', expiryDate: '2026-07-29' },
+  ];
+  assert.deepEqual(
+    getExpiryRecommendations(pantry, '2026-07-28', 3).map(item => item.id),
+    ['a', 'b'],
+  );
+});
+
+test('getExpiryRecommendations breaks same-id same-date ties by name', () => {
+  const pantry = [
+    { id: 'same', name: 'Zucchini', expiryDate: '2026-07-29' },
+    { id: 'same', name: 'Apple', expiryDate: '2026-07-29' },
+  ];
+  assert.deepEqual(
+    getExpiryRecommendations(pantry, '2026-07-28', 3).map(item => item.name),
+    ['Apple', 'Zucchini'],
+  );
+});
+
+test('getExpiryRecommendations treats exact duplicate records as semantically indistinguishable', () => {
+  const duplicate = { id: 'same', name: 'Same', expiryDate: '2026-07-29' };
+  const result = getExpiryRecommendations([duplicate, { ...duplicate }], '2026-07-28', 3);
+  assert.deepEqual(result, [duplicate, duplicate]);
+});
+
+test('mergeGroceryItems applies the complete supported field policy in either input order', () => {
+  const items = [
+    { id: 'first', source: 'manual', ingredientId: 'tomato', name: 'Zucchini tomatoes', quantity: 1, unit: 'pieces', category: 'Vegetable', checked: false },
+    { id: 'second', source: 'recipe', ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 2, unit: 'pieces', category: 'Fruit', checked: true },
+  ];
+  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: true }];
+  assert.deepEqual(mergeGroceryItems(items), expected);
+  assert.deepEqual(mergeGroceryItems([...items].reverse()), expected);
 });
