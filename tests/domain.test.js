@@ -200,7 +200,50 @@ test('mergeGroceryItems applies the complete supported field policy in either in
     { id: 'first', source: 'manual', ingredientId: 'tomato', name: 'Zucchini tomatoes', quantity: 1, unit: 'pieces', category: 'Vegetable', checked: false },
     { id: 'second', source: 'recipe', ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 2, unit: 'pieces', category: 'Fruit', checked: true },
   ];
-  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: true }];
+  const expected = [{ ingredientId: 'tomato', name: 'Cherry tomatoes', quantity: 3, unit: 'pieces', category: 'Fruit', checked: true, id: 'first', source: 'mixed' }];
   assert.deepEqual(mergeGroceryItems(items), expected);
   assert.deepEqual(mergeGroceryItems([...items].reverse()), expected);
+});
+
+test('createMealPlanEntry rejects invalid calendar components in timezone-bearing datetimes', () => {
+  for (const date of [
+    '2026-02-30T12:00:00Z',
+    '2026-02-30T12:00:00+05:30',
+    '2026-02-30T12:00:00-0500',
+  ]) {
+    assert.throws(
+      () => createMealPlanEntry({ date, mealType: 'dinner', recipeId: 'r6' }),
+      { message: 'date must be a valid date' },
+    );
+  }
+});
+
+test('mergeGroceryItems uses a collision-safe structured key and validates key fields', () => {
+  const items = [
+    { ingredientId: 'a\u0000b', unit: 'c', name: 'First', quantity: 1 },
+    { ingredientId: 'a', unit: 'b\u0000c', name: 'Second', quantity: 2 },
+  ];
+  assert.deepEqual(mergeGroceryItems(items).map(item => item.quantity), [1, 2]);
+  assert.throws(() => mergeGroceryItems([{ unit: 'pieces' }]), {
+    message: 'ingredientId and unit are required for grocery items',
+  });
+  assert.throws(() => mergeGroceryItems([{ ingredientId: 'egg' }]), {
+    message: 'ingredientId and unit are required for grocery items',
+  });
+});
+
+test('mergeGroceryItems preserves a shared source and marks conflicting sources mixed', () => {
+  const shared = mergeGroceryItems([
+    { id: 'grocery-1', source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+    { id: 'grocery-1', source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 2 },
+  ]);
+  assert.equal(shared[0].id, 'grocery-1');
+  assert.equal(shared[0].source, 'manual');
+
+  const mixed = mergeGroceryItems([
+    { id: 'recipe-1', source: 'recipe', ingredientId: 'egg', unit: 'pieces', quantity: 1 },
+    { id: 'manual-1', source: 'manual', ingredientId: 'egg', unit: 'pieces', quantity: 2 },
+  ]);
+  assert.equal(mixed[0].id, 'manual-1');
+  assert.equal(mixed[0].source, 'mixed');
 });
