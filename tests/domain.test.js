@@ -70,6 +70,25 @@ test('getAvailability counts fully stocked ingredients separately from partial s
   });
 });
 
+test('getAvailability treats stock with an incompatible unit as unavailable', () => {
+  const recipe = {
+    ingredients: [
+      { ingredientId: 'flour', quantity: 2, unit: 'pieces' },
+    ],
+  };
+  const pantry = [
+    { ingredientId: 'flour', quantity: 5, unit: 'kg' },
+  ];
+
+  assert.deepEqual(getAvailability(recipe, pantry), {
+    availableCount: 0,
+    totalCount: 1,
+    missing: [
+      { ingredientId: 'flour', quantity: 2, unit: 'pieces' },
+    ],
+  });
+});
+
 test('getExpiryRecommendations ignores items without expiry and sorts soonest first', () => {
   const today = new Date('2026-07-28T00:00:00.000Z');
   const pantry = [
@@ -136,12 +155,30 @@ test('mergeGroceryItems merges only matching ingredientId and unit pairs', () =>
   ];
 
   assert.deepEqual(mergeGroceryItems(items), [
-    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: 'Produce', checked: true },
-    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 0.5, unit: 'kg', category: 'Produce', checked: false },
     { ingredientId: 'egg', name: 'Eggs', quantity: 6, unit: 'pieces', category: 'Dairy', checked: false },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 0.5, unit: 'kg', category: 'Produce', checked: false },
+    { ingredientId: 'tomato', name: 'Tomatoes', quantity: 3, unit: 'pieces', category: 'Produce', checked: true },
   ]);
 });
 
+
+test('mergeGroceryItems sorts all groups by the collision-safe structured key', () => {
+  const items = [
+    { ingredientId: 'zucchini', unit: 'pieces', quantity: 1 },
+    { ingredientId: 'a\u0000b', unit: 'c', quantity: 2 },
+    { ingredientId: 'a', unit: 'b\u0000c', quantity: 3 },
+    { ingredientId: 'apple', unit: 'kg', quantity: 4 },
+  ];
+  const expected = mergeGroceryItems(items);
+
+  assert.deepEqual(mergeGroceryItems([...items].reverse()), expected);
+  assert.deepEqual(expected.map(item => [item.ingredientId, item.unit]), [
+    ['a', 'b\u0000c'],
+    ['a\u0000b', 'c'],
+    ['apple', 'kg'],
+    ['zucchini', 'pieces'],
+  ]);
+});
 
 test('mergeGroceryItems chooses duplicate metadata deterministically', () => {
   const items = [
@@ -234,7 +271,7 @@ test('mergeGroceryItems uses a collision-safe structured key and validates key f
     { ingredientId: 'a\u0000b', unit: 'c', name: 'First', quantity: 1 },
     { ingredientId: 'a', unit: 'b\u0000c', name: 'Second', quantity: 2 },
   ];
-  assert.deepEqual(mergeGroceryItems(items).map(item => item.quantity), [1, 2]);
+  assert.deepEqual(mergeGroceryItems(items).map(item => item.quantity), [2, 1]);
   assert.throws(() => mergeGroceryItems([{ unit: 'pieces' }]), {
     message: 'ingredientId and unit are required for grocery items',
   });
