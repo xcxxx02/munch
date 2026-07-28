@@ -135,3 +135,24 @@ test('meal actions normalize dates and replace equivalent meal slots immutably',
   assert.deepEqual(next.mealPlan[0], { id: 'new', date: '2026-07-29', mealType: 'dinner', recipeId: 'r2' });
   assert.strictEqual(state.mealPlan[0], oldEntry);
 });
+
+
+test('meal and grocery actions normalize valid IDs and reject malformed IDs', () => {
+  const state = { ...DEFAULT_STATE, grocery: [], mealPlan: [] };
+  const meal = addRecipeToPlan(state, { id: ' plan-1 ', date: '2026-07-29', mealType: 'dinner', recipeId: ' recipe-1 ' });
+  assert.deepEqual(meal.mealPlan[0], { id: 'plan-1', date: '2026-07-29', mealType: 'dinner', recipeId: 'recipe-1' });
+  assert.throws(() => addRecipeToPlan(state, { id: ' ', date: '2026-07-29', mealType: 'dinner', recipeId: 'r1' }), /meal plan entry id/);
+  assert.throws(() => addRecipeToPlan(state, { date: '2026-07-29', mealType: 'dinner', recipeId: 42 }), /recipeId/);
+  assert.throws(() => addMissingIngredients(state, [{ id: 42, ingredientId: ' egg ', unit: 'pieces' }]), /grocery item id/);
+  assert.deepEqual(addMissingIngredients(state, [{ id: ' g1 ', ingredientId: ' egg ', unit: 'pieces' }]).grocery[0].id, 'g1');
+});
+
+test('loadState discards meal-plan records with malformed IDs and trims valid IDs', () => {
+  const persisted = { ...DEFAULT_STATE, mealPlan: [
+    { id: ' plan-1 ', date: '2026-07-29', mealType: 'dinner', recipeId: ' r1 ' },
+    { id: ' ', date: '2026-07-29', mealType: 'lunch', recipeId: 'r2' },
+    { id: 7, date: '2026-07-29', mealType: 'breakfast', recipeId: 'r3' },
+  ] };
+  const loaded = loadState(memoryStorage({ 'munch:v1': JSON.stringify(persisted) }), DEFAULT_STATE);
+  assert.deepEqual(loaded.mealPlan, [{ id: 'plan-1', date: '2026-07-29', mealType: 'dinner', recipeId: 'r1' }]);
+});

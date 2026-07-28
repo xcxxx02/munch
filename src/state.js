@@ -28,6 +28,20 @@ function requireRecord(value, message) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error(message);
 }
 
+function normalizeIdentifier(value, message) {
+  if (typeof value !== 'string' || value.trim() === '') throw new Error(message);
+  return value.trim();
+}
+
+function normalizeGroceryItem(item) {
+  const normalized = { ...item,
+    ingredientId: normalizeIdentifier(item.ingredientId, 'ingredientId must be a non-blank string'),
+  };
+  if (item.id !== undefined) normalized.id = normalizeIdentifier(item.id, 'grocery item id must be a non-blank string');
+  return normalized;
+}
+
+
 export function addPantryItem(state, item) {
   assertState(state);
   requireRecord(item, 'pantry item must be an object');
@@ -53,7 +67,11 @@ export function toggleGroceryItem(state, groceryId) {
 export function addRecipeToPlan(state, entry) {
   assertState(state);
   requireRecord(entry, 'meal plan entry must be an object');
-  const normalized = createMealPlanEntry(entry);
+  const normalizedEntry = { ...entry,
+    recipeId: normalizeIdentifier(entry.recipeId, 'recipeId must be a non-blank string'),
+  };
+  if (entry.id !== undefined) normalizedEntry.id = normalizeIdentifier(entry.id, 'meal plan entry id must be a non-blank string');
+  const normalized = createMealPlanEntry(normalizedEntry);
   const mealPlan = state.mealPlan.filter(item => {
     try {
       const existing = createMealPlanEntry(item);
@@ -62,7 +80,7 @@ export function addRecipeToPlan(state, entry) {
       return true;
     }
   });
-  return { ...state, mealPlan: [...mealPlan, { ...entry, ...normalized, id: entry.id ?? normalized.id }] };
+  return { ...state, mealPlan: [...mealPlan, { ...normalizedEntry, ...normalized, id: normalizedEntry.id ?? normalized.id }] };
 }
 
 export function addMissingIngredients(state, missing) {
@@ -70,7 +88,7 @@ export function addMissingIngredients(state, missing) {
   if (!Array.isArray(missing)) throw new Error('missing ingredients must be an array');
   const additions = missing.map(item => {
     requireRecord(item, 'missing ingredient must be an object');
-    return { ...item, source: item.source ?? 'recipe' };
+    return { ...normalizeGroceryItem(item), source: item.source ?? 'recipe' };
   });
-  return { ...state, grocery: mergeGroceryItems([...state.grocery, ...additions]) };
+  return { ...state, grocery: mergeGroceryItems([...state.grocery.map(normalizeGroceryItem), ...additions]) };
 }

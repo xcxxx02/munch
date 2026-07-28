@@ -26,11 +26,14 @@ function normalizeMealPlan(mealPlan) {
   const slots = new Map();
   for (const item of mealPlan.filter(isRecord)) {
     try {
-      const normalized = createMealPlanEntry(item);
+      if (item.recipeId === undefined || typeof item.recipeId !== 'string' || item.recipeId.trim() === '') continue;
+      if (item.id !== undefined && (typeof item.id !== 'string' || item.id.trim() === '')) continue;
+      const normalized = createMealPlanEntry({ ...item, recipeId: item.recipeId.trim() });
       slots.set(`${normalized.date}:${normalized.mealType}`, {
         ...item,
         ...normalized,
-        id: typeof item.id === 'string' && item.id.trim() !== '' ? item.id : normalized.id,
+        id: typeof item.id === 'string' ? item.id.trim() : normalized.id,
+        recipeId: normalized.recipeId,
       });
     } catch {
       // Ignore malformed persisted records while retaining the rest of the state.
@@ -43,7 +46,17 @@ export function normalizeState(value) {
   if (!isState(value)) return null;
   let grocery;
   try {
-    grocery = mergeGroceryItems(value.grocery.filter(item => isRecord(item) && typeof item.ingredientId === 'string' && item.ingredientId.trim() !== '' && typeof item.unit === 'string' && item.unit.trim() !== ''));
+    grocery = mergeGroceryItems(value.grocery
+      .filter(item => isRecord(item)
+        && typeof item.ingredientId === 'string'
+        && item.ingredientId.trim() !== ''
+        && typeof item.unit === 'string'
+        && item.unit.trim() !== '')
+      .map(item => ({
+        ...item,
+        ingredientId: item.ingredientId.trim(),
+        ...(item.id === undefined ? {} : (typeof item.id === 'string' && item.id.trim() !== '' ? { id: item.id.trim() } : { id: undefined })),
+      })));
   } catch {
     grocery = [];
   }
