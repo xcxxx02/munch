@@ -36,6 +36,7 @@ function normalizeIdentifier(value, message) {
 function normalizeGroceryItem(item) {
   const normalized = { ...item,
     ingredientId: normalizeIdentifier(item.ingredientId, 'ingredientId must be a non-blank string'),
+    unit: normalizeIdentifier(item.unit, 'ingredientId and unit are required for grocery items'),
   };
   if (item.id !== undefined) normalized.id = normalizeIdentifier(item.id, 'grocery item id must be a non-blank string');
   return normalized;
@@ -45,19 +46,20 @@ function normalizeGroceryItem(item) {
 export function addPantryItem(state, item) {
   assertState(state);
   requireRecord(item, 'pantry item must be an object');
+  const ingredientId = normalizeIdentifier(item.ingredientId, 'ingredientId must be a non-blank string');
   if (item.id !== undefined && (typeof item.id !== 'string' || item.id.trim() === '')) {
     throw new Error('pantry item id must be a non-blank string');
   }
-  const pantryItem = { ...item, id: item.id === undefined ? createPantryId() : item.id.trim() };
+  const pantryItem = { ...item, ingredientId, id: item.id === undefined ? createPantryId() : item.id.trim() };
   return { ...state, pantry: [...state.pantry, pantryItem] };
 }
 
 export function toggleGroceryItem(state, groceryId) {
   assertState(state);
-  if (typeof groceryId !== 'string' || groceryId.trim() === '') throw new Error('groceryId must be a non-blank string');
+  const normalizedId = normalizeIdentifier(groceryId, 'groceryId must be a non-blank string');
   let changed = false;
   const grocery = state.grocery.map(item => {
-    if (item.id !== groceryId) return item;
+    if (typeof item?.id !== 'string' || item.id.trim() !== normalizedId) return item;
     changed = true;
     return { ...item, checked: !item.checked };
   });

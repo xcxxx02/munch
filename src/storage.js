@@ -19,7 +19,8 @@ function isState(value) {
 function normalizePantry(pantry) {
   return pantry.filter(isRecord)
     .filter(item => typeof item.id === 'string' && item.id.trim() !== '')
-    .map(item => ({ ...item, id: item.id.trim() }));
+    .filter(item => typeof item.ingredientId === 'string' && item.ingredientId.trim() !== '')
+    .map(item => ({ ...item, id: item.id.trim(), ingredientId: item.ingredientId.trim() }));
 }
 
 function normalizeMealPlan(mealPlan) {
@@ -51,11 +52,13 @@ export function normalizeState(value) {
         && typeof item.ingredientId === 'string'
         && item.ingredientId.trim() !== ''
         && typeof item.unit === 'string'
-        && item.unit.trim() !== '')
+        && item.unit.trim() !== ''
+        && (item.id === undefined || (typeof item.id === 'string' && item.id.trim() !== '')))
       .map(item => ({
         ...item,
         ingredientId: item.ingredientId.trim(),
-        ...(item.id === undefined ? {} : (typeof item.id === 'string' && item.id.trim() !== '' ? { id: item.id.trim() } : { id: undefined })),
+        unit: item.unit.trim(),
+        ...(item.id === undefined ? {} : { id: item.id.trim() }),
       })));
   } catch {
     grocery = [];

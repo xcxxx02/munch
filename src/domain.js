@@ -29,6 +29,10 @@ function hasRequiredKeyValue(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
+function normalizeGroceryKey(value) {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
 function asGrocerySource(value) {
   return GROCERY_SOURCES.has(value) ? value : undefined;
 }
@@ -118,10 +122,12 @@ export function mergeGroceryItems(items) {
   if (!Array.isArray(items)) return [];
   const merged = new Map();
   for (const item of items) {
-    if (!hasRequiredKeyValue(item?.ingredientId) || !hasRequiredKeyValue(item?.unit)) {
+    const ingredientId = normalizeGroceryKey(item?.ingredientId);
+    const unit = normalizeGroceryKey(item?.unit);
+    if (ingredientId === null || unit === null) {
       throw new Error('ingredientId and unit are required for grocery items');
     }
-    const key = JSON.stringify([item.ingredientId, item.unit]);
+    const key = JSON.stringify([ingredientId, unit]);
     const existing = merged.get(key);
     if (existing) {
       existing.quantity += asQuantity(item?.quantity);
@@ -137,10 +143,10 @@ export function mergeGroceryItems(items) {
       }
     } else {
       const mergedItem = {
-        ingredientId: item.ingredientId,
+        ingredientId,
         name: item?.name,
         quantity: asQuantity(item?.quantity),
-        unit: item.unit,
+        unit,
         category: item?.category,
         checked: Boolean(item?.checked),
       };
