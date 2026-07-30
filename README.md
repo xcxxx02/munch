@@ -1,13 +1,39 @@
-﻿# Munch
+# Munch
 
-Munch is a mobile-first local-first meal planner for small, happy meals. It connects curated Malaysian recipes, pantry ingredients, meal planning and grocery shopping in one browser-native app.
+Munch is a mobile-first meal planner that helps one person decide what to cook, use ingredients before they expire, and build a grocery list from a weekly plan.
 
-The browser entry point is `index.html`, which loads the screen controller from `src/app.js`. State is stored locally under `munch:v1`; there is no backend or external image dependency.
+## Stack
 
-## Tests
+- React 19 + Vite
+- Tailwind CSS
+- Zustand
+- LocalStorage persistence
+- Lucide icons
 
-```sh
-npm test
+The app is a responsive web application. It does not require a database or account yet.
+
+## Run locally
+
+```powershell
+npm install
+npm run dev
 ```
 
-The test suite uses Node's built-in test runner and covers the pure pantry, planning, grocery and persistence rules.
+Open the local URL printed by Vite.
+
+## Checks
+
+```powershell
+npm test
+npm run build
+```
+
+## Main flows
+
+- Today recommendation with mood filters
+- Seven-day breakfast, lunch and dinner plan
+- Recipe filters, recipe details and step-by-step Cooking Mode
+- Pantry quick add, quantity and expiry editing
+- Grocery list generated from planned recipes plus manual items
+
+State is saved under the versioned LocalStorage key `munch:v1`.

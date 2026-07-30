@@ -1,56 +1,60 @@
-import test from 'node:test';
+﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 
-const root = new URL('../', import.meta.url);
-const [html, css, ui, app, data] = await Promise.all([
-  readFile(new URL('../index.html', import.meta.url), 'utf8'),
-  readFile(new URL('../styles.css', import.meta.url), 'utf8'),
-  readFile(new URL('../src/ui.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/app.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/data.js', import.meta.url), 'utf8'),
-]);
+const files = {
+  html: '../index.html',
+  main: '../src/main.jsx',
+  shell: '../src/components/Shell.jsx',
+  modal: '../src/components/Modal.jsx',
+  card: '../src/components/RecipeCard.jsx',
+  css: '../src/index.css',
+  tailwind: '../tailwind.config.js',
+  data: '../src/data.js',
+};
+const source = Object.fromEntries(await Promise.all(Object.entries(files).map(async ([key, path]) => [key, await readFile(new URL(path, import.meta.url), 'utf8')])));
 
-test('visual shell keeps the local-first asset and encoding contract', () => {
-  assert.doesNotMatch(html, /fonts\.googleapis|https?:\/\//);
-  assert.match(html, /meta charset="UTF-8"/i);
-  assert.match(html, /viewport-fit=cover/);
-  assert.match(html, /script type="module" src="src\/app\.js"/);
-  assert.match(ui, /src="\$\{esc\(recipe\.image\)\}"/);
-  assert.match(ui, /this\.src='\$\{esc\(recipe\.fallbackImage\)\}'/);
-  assert.doesNotMatch(ui, /onerror="this\.remove\(\)"/);
-  assert.doesNotMatch(`${html}\n${ui}\n${app}\n${data}`, /[\u00c3\u00c2\u00e2\u00f0\u00ef]/);
+test('React, Vite and Tailwind shell is wired from the HTML entrypoint', () => {
+  assert.match(source.html, /<div id="root"><\/div>/);
+  assert.match(source.html, /src="\/src\/main\.jsx"/);
+  assert.match(source.main, /ReactDOM\.createRoot/);
+  assert.match(source.main, /addEventListener\('hashchange'/);
+  assert.match(source.main, /import '\.\/index\.css'/);
+  assert.match(source.css, /@tailwind base/);
+});
+
+test('five routed screens and Zustand-backed application shell remain present', () => {
+  for (const path of ['plan', 'recipes', 'pantry', 'grocery']) assert.match(source.main, new RegExp(`'/${path}':`));
+  assert.match(source.shell, /useMunchStore/);
+  assert.match(source.shell, /grid-cols-5/);
+  assert.match(source.shell, /safe-area-inset-bottom/);
 });
 
 test('generated recipe assets and declared fallback are present', () => {
   for (const asset of ['nasi-lemak.jpg', 'tomato-egg-rice.jpg', 'mee-goreng.jpg', 'chicken-porridge.jpg', 'placeholder.svg']) {
     assert.equal(existsSync(new URL(`../public/recipes/${asset}`, import.meta.url)), true, asset);
   }
-  assert.match(data, /fallbackImage: resolveAssetPath\(FALLBACK_RECIPE_IMAGE\)/);
+  assert.match(source.data, /fallbackImage: resolveAssetPath\(FALLBACK_RECIPE_IMAGE\)/);
+  assert.match(source.card, /event\.currentTarget\.src = fallback/);
 });
 
-test('modal source contract provides useful focus and restores its opener', () => {
-  assert.match(html, /role="dialog"[^>]*aria-modal="true"[^>]*tabindex="-1"/);
-  assert.match(app, /modalTrigger = document\.activeElement/);
-  assert.match(app, /querySelector\('input, button, \[tabindex/);
-  assert.match(app, /if \(trigger\?\.isConnected\) trigger\.focus\(\)/);
+test('React modal traps focus, supports Escape and restores the opener', () => {
+  assert.match(source.modal, /role="dialog"/);
+  assert.match(source.modal, /aria-modal="true"/);
+  assert.match(source.modal, /event\.key === 'Escape'/);
+  assert.match(source.modal, /event\.key !== 'Tab'/);
+  assert.match(source.modal, /openerRef\.current\?\.focus/);
 });
 
-
-test('modal source contract traps keyboard focus while open', () => {
-  assert.match(app, /event\.key === 'Tab' && modalWrap\.classList\.contains\('open'\)/);
-  assert.match(app, /modalFocusableSelector = 'button:not\(\[disabled\]\)/);
-  assert.match(app, /event\.shiftKey \? last : first/);
-  assert.match(app, /if \(!first\) \{ event\.preventDefault\(\); modalWrap\.querySelector\('\.modal'\)\?\.focus\(\)/);
-  assert.match(app, /if \(event\.key === 'Escape'\) \{ closeModal\(\); return; \}/);
+test('Pocket Bento visual system includes accessible motion and touch guardrails', () => {
+  for (const token of ['#FFF8E8', '#FFD96A', '#F36F56', '#CFE9D8', '#56396F', '#173B34']) assert.match(source.tailwind, new RegExp(token, 'i'));
+  assert.match(source.css, /min-h-11/);
+  assert.match(source.css, /focus-visible/);
+  assert.match(source.css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(source.tailwind, /munchBounce/);
 });
 
-test('visual system includes accessible interaction guardrails', () => {
-  for (const token of ['#fff9ef', '#25483c', '#dcefe2', '#ffd978', '#f47b61']) assert.match(css, new RegExp(token, 'i'));
-  assert.match(css, /min-height:\s*44px/);
-  assert.match(css, /focus-visible/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.match(css, /env\(safe-area-inset-bottom\)/);
-  assert.match(css, /grid-template-columns:\s*repeat\(5/);
+test('active React source has no common mojibake markers', () => {
+  assert.doesNotMatch(Object.values(source).join('\n'), /[\u00c3\u00c2\u00e2\u00f0\u00ef]/);
 });

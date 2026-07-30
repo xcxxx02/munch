@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { background: #173b34; }
+  body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(circle at 10% 5%, rgba(255,217,106,.35), transparent 26rem), #fff8e8; color: #173b34; font-family: Nunito, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 3px solid #56396f; outline-offset: 3px; }
+}
+
+@layer components {
+  .page { @apply mx-auto w-full max-w-6xl px-4 pb-32 pt-5 sm:px-6 lg:px-10; }
+  .section-title { @apply font-display text-2xl font-black tracking-[-0.04em] text-ink sm:text-3xl; }
+  .eyebrow { @apply text-xs font-extrabold uppercase tracking-[0.16em] text-tomato; }
+  .soft-card { @apply rounded-munch border-2 border-ink/10 bg-white/80 shadow-card backdrop-blur-sm; }
+  .primary-btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-custard px-5 font-extrabold text-ink shadow-[0_5px_0_#173B34] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_7px_0_#173B34] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50; }
+  .secondary-btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-2 border-ink/15 bg-white px-4 font-bold text-ink transition hover:border-ink/40 hover:bg-butter; }
+  .chip { @apply inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-ink/10 bg-white/80 px-4 text-sm font-extrabold text-ink transition hover:-translate-y-0.5 hover:border-ink/25; }
+  .chip-active { @apply border-ink bg-ink text-white shadow-[0_4px_0_rgba(86,57,111,.35)]; }
+  .field { @apply min-h-12 w-full rounded-2xl border-2 border-ink/15 bg-white px-4 text-ink placeholder:text-ink/40 focus:border-aubergine focus:outline-none; }
+}
+
+.bento-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
+.rice-grain { position: absolute; width: 10px; height: 18px; border-radius: 999px; background: rgba(255,255,255,.82); transform: rotate(var(--rice-rotate,20deg)); }
+.recipe-photo { transition: transform 450ms cubic-bezier(.2,.8,.2,1); }
+.recipe-card:hover .recipe-photo { transform: scale(1.045) rotate(.4deg); }
+.page-enter { animation: popIn .38s cubic-bezier(.2,.8,.2,1) both; }
+.overflow-x-auto { scrollbar-width: none; }
+.overflow-x-auto::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
