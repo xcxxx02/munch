@@ -1,3 +1,5 @@
+import { extraRecipeDetails } from './extraRecipes.js';
+
 export const dietaryTags = ['halal', 'vegetarian', 'no-pork', 'no-seafood'];
 
 export const mealTypes = ['breakfast', 'lunch', 'dinner'];
@@ -34,6 +36,16 @@ export const ingredients = [
   { id: 'curry-powder', name: 'Curry powder', localName: 'Serbuk kari', icon: '🥘', category: 'Spices', defaultUnit: 'grams' },
   { id: 'flour', name: 'Plain flour', localName: 'Tepung gandum', icon: '🥣', category: 'Baking', defaultUnit: 'grams' },
   { id: 'water', name: 'Water', localName: 'Air', icon: '💧', category: 'Pantry', defaultUnit: 'millilitres' },
+  { id: 'bread', name: 'Sandwich bread', localName: 'Roti keping', icon: '\u{1F35E}', category: 'Bakery', defaultUnit: 'pieces' },
+  { id: 'kaya-spread', name: 'Kaya spread', localName: 'Kaya', icon: '\u{1FAD9}', category: 'Pantry', defaultUnit: 'grams' },
+  { id: 'rolled-oats', name: 'Rolled oats', localName: 'Oat gulung', icon: '\u{1F963}', category: 'Grains', defaultUnit: 'grams' },
+  { id: 'banana', name: 'Bananas', localName: 'Pisang', icon: '\u{1F34C}', category: 'Produce', defaultUnit: 'pieces' },
+  { id: 'milk', name: 'Milk', localName: 'Susu', icon: '\u{1F95B}', category: 'Dairy & Eggs', defaultUnit: 'millilitres' },
+  { id: 'potato', name: 'Potatoes', localName: 'Kentang', icon: '\u{1F954}', category: 'Produce', defaultUnit: 'pieces' },
+  { id: 'canned-tuna', name: 'Canned tuna', localName: 'Tuna tin', icon: '\u{1F41F}', category: 'Seafood', defaultUnit: 'grams' },
+  { id: 'tofu', name: 'Firm tofu', localName: 'Tauhu', icon: '\u{1F9C8}', category: 'Protein', defaultUnit: 'grams' },
+  { id: 'tortilla', name: 'Tortilla wraps', localName: 'Roti tortilla', icon: '\u{1F32F}', category: 'Bakery', defaultUnit: 'pieces' },
+  { id: 'lettuce', name: 'Lettuce', localName: 'Daun salad', icon: '\u{1F96C}', category: 'Produce', defaultUnit: 'grams' },
 ];
 
 const FALLBACK_RECIPE_IMAGE = 'recipes/placeholder.svg';
@@ -211,7 +223,7 @@ export const recipes = [
       { ingredientId: 'salt', quantity: 5, unit: 'grams' },
     ],
     steps: ['Mix flour, water and salt into a soft dough; knead for 5 minutes.', 'Divide into two balls, coat with oil and rest for 15 minutes.', 'Stretch each dough ball thinly, fold into a square and flatten.', 'Beat eggs with diced onion and a pinch of salt.', 'Cook each roti in an oiled pan, pour egg mixture over it, fold and fry until golden on both sides.'] }),
-];
+].concat(extraRecipeDetails.map(recipe));
 
 const ingredientById = new Map(ingredients.map(ingredient => [ingredient.id, ingredient]));
 

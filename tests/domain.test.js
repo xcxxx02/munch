@@ -460,6 +460,7 @@ test('recipe images have an exact JPG contract and a local fallback asset', () =
   for (const recipe of recipes) {
     assert.equal(recipe.image, `/recipes/${recipe.id}.jpg`);
     assert.equal(recipe.fallbackImage, '/recipes/placeholder.svg');
+    assert.equal(existsSync(resolve('public', recipe.image.slice(1))), true, `${recipe.id} image is missing`);
   }
   assert.equal(existsSync(resolve('public/recipes/placeholder.svg')), true);
 });

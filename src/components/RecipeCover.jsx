@@ -9,6 +9,8 @@ export function RecipeCover({ recipe, className = '' }) {
     return <img className={`h-full w-full object-cover ${className}`} src={recipe.image} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = recipe.fallbackImage; }} alt={recipe.name} />;
   }
 
+  if (recipe.imageData) return <img className={`h-full w-full object-cover ${className}`} src={recipe.imageData} alt={recipe.name} />;
+
   const allIngredients = [...catalogIngredients, ...customIngredients];
   const featured = recipe.ingredients.slice(0, 4).map(ref => ingredientById(allIngredients, ref.ingredientId));
   return (

@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { CalendarClock, ChevronLeft, Edit3, PackageOpen, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { ingredients } from '../data.js';
 import { useMunchStore } from '../store.js';
-import { formatDate, ingredientById, todayISO } from '../utils.js';
+import { dateFromToday, daysLeftLabel, daysUntil, ingredientById, todayISO } from '../utils.js';
 import { IngredientThumb } from '../components/IngredientThumb.jsx';
 import { Modal } from '../components/Modal.jsx';
 
 const icons = ['\u{1F9FA}', '\u{1F966}', '\u{1F34E}', '\u{1F95B}', '\u{1F9C0}', '\u{1F969}', '\u{1F41F}', '\u{1F33E}', '\u{1FAD8}', '\u{1FAD9}', '\u{1F33F}', '\u{1F36B}'];
 const units = ['pieces', 'grams', 'millilitres', 'stalks', 'cloves', 'packs', 'cans'];
-const emptyDetails = { quantity: '1', expiryDate: '' };
+const emptyDetails = { quantity: '1', shelfLifeDays: '' };
 
 export function PantryPage() {
   const pantry = useMunchStore(state => state.pantry);
@@ -24,24 +24,26 @@ export function PantryPage() {
   const [details, setDetails] = useState(emptyDetails);
   const [custom, setCustom] = useState({ name: '', localName: '', icon: '\u{1F9FA}', category: 'Other', defaultUnit: 'pieces' });
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ quantity: '', expiryDate: '' });
+  const [form, setForm] = useState({ quantity: '', shelfLifeDays: '' });
   const allIngredients = useMemo(() => [...ingredients, ...customIngredients], [customIngredients]);
   const matches = useMemo(() => allIngredients.filter(item => `${item.name} ${item.localName} ${item.category}`.toLowerCase().includes(query.toLowerCase())).slice(0, 30), [allIngredients, query]);
   const resetAdd = () => { setAddOpen(false); setQuery(''); setSelected(null); setCreating(false); setDetails(emptyDetails); };
-  const openEdit = item => { setEditing(item); setForm({ quantity: item.quantity ?? '', expiryDate: item.expiryDate ?? '' }); };
-  const choose = ingredient => { setSelected(ingredient); setDetails({ quantity: ingredient.id === 'egg' ? '6' : '1', expiryDate: '' }); };
+  const openEdit = item => { setEditing(item); setForm({ quantity: item.quantity ?? '', shelfLifeDays: daysUntil(item.expiryDate) }); };
+  const choose = ingredient => { setSelected(ingredient); setDetails({ quantity: ingredient.id === 'egg' ? '6' : '1', shelfLifeDays: '' }); };
 
   const saveSelected = () => {
-    if (addPantryWithDetails(selected, details)) resetAdd();
+    const payload = { ...details, expiryDate: details.shelfLifeDays === '' ? '' : dateFromToday(details.shelfLifeDays) };
+    if (addPantryWithDetails(selected, payload)) resetAdd();
   };
   const saveCustom = () => {
-    if (addCustomIngredient({ ...custom, name: custom.name || query }, details)) resetAdd();
+    const payload = { ...details, expiryDate: details.shelfLifeDays === '' ? '' : dateFromToday(details.shelfLifeDays) };
+    if (addCustomIngredient({ ...custom, name: custom.name || query }, payload)) resetAdd();
   };
 
   return <div className="page">
     <header className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow">Your ingredients</p><h1 className="mt-1 font-display text-4xl font-black tracking-[-.055em] sm:text-5xl">A calmer little<br /><span className="text-leaf">kitchen shelf.</span></h1></div><button className="primary-btn shrink-0" onClick={() => setAddOpen(true)}><Plus size={19} /><span className="hidden sm:inline">Add ingredient</span></button></header>
     <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3"><div className="rounded-munch bg-mint p-4"><strong className="font-display text-3xl font-black">{pantry.length}</strong><small className="block font-extrabold text-ink/50">items stocked</small></div><div className="rounded-munch bg-custard p-4"><strong className="font-display text-3xl font-black">{pantry.filter(item => item.expiryDate && item.expiryDate <= todayISO()).length}</strong><small className="block font-extrabold text-ink/50">need attention</small></div><div className="col-span-2 rounded-munch bg-aubergine p-4 text-white sm:col-span-1"><strong className="font-display text-xl font-black">Tiny shelf, big help.</strong><small className="mt-1 block font-bold text-white/60">Add what you actually use.</small></div></div>
-    {pantry.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{pantry.map(item => { const ingredient = ingredientById(allIngredients, item.ingredientId); const expired = item.expiryDate && item.expiryDate < todayISO(); return <article key={item.id} className={`soft-card p-4 ${expired ? 'border-tomato/50' : ''}`}><div className="flex items-start gap-3"><IngredientThumb ingredient={ingredient} /><span className="min-w-0 flex-1"><strong className="block truncate font-display text-lg font-black">{ingredient.name}</strong><small className="font-bold text-ink/45">{ingredient.localName || ingredient.category}</small></span><button className="grid h-11 w-11 place-items-center rounded-xl bg-butter" onClick={() => openEdit(item)} aria-label={`Edit ${ingredient.name}`}><Edit3 size={17} /></button></div><div className="mt-4 flex items-center justify-between border-t border-ink/10 pt-3"><span className="font-extrabold">{item.quantity} <small className="text-ink/45">{item.unit}</small></span>{item.expiryDate ? <span className={`flex items-center gap-1 text-xs font-extrabold ${expired ? 'text-tomato' : 'text-ink/45'}`}><CalendarClock size={14} />{expired ? 'Past its best' : formatDate(item.expiryDate)}</span> : <span className="text-xs font-bold text-ink/35">No expiry</span>}</div></article>; })}</div> : <div className="soft-card p-10 text-center"><PackageOpen className="mx-auto text-tomato" size={42} /><p className="mt-3 font-display text-2xl font-black">Your shelf is waiting.</p><button className="primary-btn mt-4" onClick={() => setAddOpen(true)}>Add your first item</button></div>}
+    {pantry.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{pantry.map(item => { const ingredient = ingredientById(allIngredients, item.ingredientId); const expired = item.expiryDate && item.expiryDate < todayISO(); return <article key={item.id} className={`soft-card p-4 ${expired ? 'border-tomato/50' : ''}`}><div className="flex items-start gap-3"><IngredientThumb ingredient={ingredient} /><span className="min-w-0 flex-1"><strong className="block truncate font-display text-lg font-black">{ingredient.name}</strong><small className="font-bold text-ink/45">{ingredient.localName || ingredient.category}</small></span><button className="grid h-11 w-11 place-items-center rounded-xl bg-butter" onClick={() => openEdit(item)} aria-label={`Edit ${ingredient.name}`}><Edit3 size={17} /></button></div><div className="mt-4 flex items-center justify-between border-t border-ink/10 pt-3"><span className="font-extrabold">{item.quantity} <small className="text-ink/45">{item.unit}</small></span>{item.expiryDate ? <span className={`flex items-center gap-1 text-xs font-extrabold ${expired ? 'text-tomato' : 'text-ink/45'}`}><CalendarClock size={14} />{expired ? 'Past its best' : daysLeftLabel(item.expiryDate)}</span> : <span className="text-xs font-bold text-ink/35">No expiry</span>}</div></article>; })}</div> : <div className="soft-card p-10 text-center"><PackageOpen className="mx-auto text-tomato" size={42} /><p className="mt-3 font-display text-2xl font-black">Your shelf is waiting.</p><button className="primary-btn mt-4" onClick={() => setAddOpen(true)}>Add your first item</button></div>}
 
     <Modal open={addOpen} onClose={resetAdd} title={creating ? 'Create an ingredient' : selected ? `Add ${selected.name}` : 'Add an ingredient'}>
       {!selected && !creating ? <div>
@@ -64,11 +66,11 @@ export function PantryPage() {
       </div>}
     </Modal>
     <Modal open={Boolean(editing)} onClose={() => setEditing(null)} title={editing ? ingredientById(allIngredients, editing.ingredientId).name : 'Pantry item'}>
-      <div className="space-y-4"><label className="block"><span className="mb-2 block text-sm font-extrabold">Quantity</span><input className="field" type="number" min="0" step="0.5" value={form.quantity} onChange={event => setForm(value => ({ ...value, quantity: event.target.value }))} /></label><label className="block"><span className="mb-2 block text-sm font-extrabold">Expiry date</span><input className="field" type="date" value={form.expiryDate} onChange={event => setForm(value => ({ ...value, expiryDate: event.target.value }))} /></label><button className="primary-btn w-full" onClick={() => { if (updatePantry(editing.id, form)) setEditing(null); }}>Save changes</button><button className="secondary-btn w-full text-tomato" onClick={() => { removePantry(editing.id); setEditing(null); }}><Trash2 size={18} /> Remove from pantry</button></div>
+      <div className="space-y-4"><label className="block"><span className="mb-2 block text-sm font-extrabold">Quantity</span><input className="field" type="number" min="0" step="0.5" value={form.quantity} onChange={event => setForm(value => ({ ...value, quantity: event.target.value }))} /></label><label className="block"><span className="mb-2 block text-sm font-extrabold">How many days left?</span><input className="field" type="number" min="0" inputMode="numeric" placeholder="e.g. 5" value={form.shelfLifeDays} onChange={event => setForm(value => ({ ...value, shelfLifeDays: event.target.value }))} /></label><button className="primary-btn w-full" onClick={() => { if (updatePantry(editing.id, { quantity: form.quantity, expiryDate: form.shelfLifeDays === '' ? '' : dateFromToday(form.shelfLifeDays) })) setEditing(null); }}>Save changes</button><button className="secondary-btn w-full text-tomato" onClick={() => { removePantry(editing.id); setEditing(null); }}><Trash2 size={18} /> Remove from pantry</button></div>
     </Modal>
   </div>;
 }
 
 function QuantityFields({ details, setDetails, unit }) {
-  return <div className="grid grid-cols-2 gap-3"><label><span className="mb-2 block text-sm font-extrabold">Quantity {unit && <small className="text-ink/40">({unit})</small>}</span><input className="field" type="number" min="0.1" step="0.5" value={details.quantity} onChange={event => setDetails(value => ({ ...value, quantity: event.target.value }))} /></label><label><span className="mb-2 block text-sm font-extrabold">Expiry <small className="text-ink/40">optional</small></span><input className="field" type="date" value={details.expiryDate} onChange={event => setDetails(value => ({ ...value, expiryDate: event.target.value }))} /></label></div>;
+  return <div className="grid grid-cols-2 gap-3"><label><span className="mb-2 block text-sm font-extrabold">Quantity {unit && <small className="text-ink/40">({unit})</small>}</span><input className="field" type="number" min="0.1" step="0.5" value={details.quantity} onChange={event => setDetails(value => ({ ...value, quantity: event.target.value }))} /></label><label><span className="mb-2 block text-sm font-extrabold">Days left <small className="text-ink/40">optional</small></span><input className="field" type="number" min="0" inputMode="numeric" placeholder="e.g. 5" value={details.shelfLifeDays} onChange={event => setDetails(value => ({ ...value, shelfLifeDays: event.target.value }))} /></label></div>;
 }

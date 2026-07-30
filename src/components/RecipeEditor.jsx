@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { Check, ImagePlus, LoaderCircle, Plus, Sparkles, Trash2, X } from 'lucide-react';
 import { dietaryTags, ingredients, mealTypes } from '../data.js';
 import { useMunchStore } from '../store.js';
+import { compressRecipeImage } from '../image.js';
 import { ingredientById, label } from '../utils.js';
 import { IngredientThumb } from './IngredientThumb.jsx';
 import { Modal } from './Modal.jsx';
@@ -16,8 +17,12 @@ export function RecipeEditor({ open, recipe, onClose, onSaved }) {
   const [draft, setDraft] = useState(blank);
   const [ingredientId, setIngredientId] = useState('egg');
   const [quantity, setQuantity] = useState('1');
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageError, setImageError] = useState('');
   useEffect(() => {
     if (!open) return;
+    setImageError('');
+    setImageBusy(false);
     setDraft(recipe ? { ...recipe, ingredients: recipe.ingredients.map(item => ({ ...item })), steps: [...recipe.steps] } : { ...blank, ingredients: [], steps: [''] });
   }, [open, recipe]);
   const selectedIngredient = ingredientById(allIngredients, ingredientId);
@@ -29,6 +34,21 @@ export function RecipeEditor({ open, recipe, onClose, onSaved }) {
     setQuantity('1');
   };
   const toggleTag = tag => setDraft(value => ({ ...value, dietaryTags: value.dietaryTags.includes(tag) ? value.dietaryTags.filter(item => item !== tag) : [...value.dietaryTags, tag] }));
+const chooseImage = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageBusy(true);
+    setImageError('');
+    try {
+      const imageData = await compressRecipeImage(file);
+      setDraft(value => ({ ...value, imageData }));
+    } catch (error) {
+      setImageError(error.message);
+    } finally {
+      setImageBusy(false);
+      event.target.value = '';
+    }
+  };
   const submit = () => {
     const normalized = { ...draft, steps: draft.steps.map(step => step.trim()).filter(Boolean) };
     if (saveRecipe(normalized)) { onSaved?.(); onClose(); }
@@ -37,6 +57,15 @@ export function RecipeEditor({ open, recipe, onClose, onSaved }) {
   return <Modal open={open} onClose={onClose} title={recipe ? 'Edit your recipe' : 'Make your own recipe'} size="large">
     <div className="space-y-6">
       <div className="flex items-center gap-3 rounded-2xl bg-custard/45 p-4"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-aubergine shadow-card"><Sparkles size={20} /></span><p className="text-sm font-bold text-ink/60">Pick ingredients and write the cooking steps. Munch makes the cover for you.</p></div>
+<section>
+        <p className="eyebrow mb-3">Recipe photo</p>
+        <div className="relative overflow-hidden rounded-[1.5rem] border-2 border-dashed border-aubergine/25 bg-mint/35">
+          {draft.imageData ? <div className="aspect-[16/7]"><img src={draft.imageData} alt="Your recipe preview" className="h-full w-full object-cover" /></div> : <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 p-6 text-center"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-aubergine shadow-card">{imageBusy ? <LoaderCircle className="animate-spin" size={21} /> : <ImagePlus size={21} />}</span><strong className="font-display text-lg font-black">Add a food photo</strong><small className="max-w-xs font-bold text-ink/45">Choose one from your phone. It will be resized before saving.</small><input className="sr-only" type="file" accept="image/*" onChange={chooseImage} disabled={imageBusy} /></label>}
+          {draft.imageData && <div className="absolute bottom-3 right-3 flex gap-2"><label className="secondary-btn min-h-10 cursor-pointer bg-white/95 px-3 text-sm"><ImagePlus size={16} /> Replace<input className="sr-only" type="file" accept="image/*" onChange={chooseImage} disabled={imageBusy} /></label><button type="button" className="secondary-btn min-h-10 bg-white/95 px-3 text-sm text-tomato" onClick={() => setDraft(value => ({ ...value, imageData: '' }))}><Trash2 size={16} /> Remove</button></div>}
+        </div>
+        {imageError && <p className="mt-2 text-sm font-bold text-tomato">{imageError}</p>}
+      </section>
+
       <section>
         <p className="eyebrow mb-3">The dish</p>
         <div className="grid gap-3 sm:grid-cols-2"><label><span className="mb-2 block text-sm font-extrabold">Recipe name</span><input autoFocus className="field" value={draft.name} onChange={event => setDraft(value => ({ ...value, name: event.target.value }))} placeholder="e.g. Mum's fried rice" /></label><label><span className="mb-2 block text-sm font-extrabold">Another name <small className="text-ink/40">optional</small></span><input className="field" value={draft.localName} onChange={event => setDraft(value => ({ ...value, localName: event.target.value }))} placeholder="Local or family nickname" /></label></div>

@@ -1,0 +1,45 @@
+export const extraRecipeDetails = [
+  { id: 'kaya-toast-eggs', name: 'Kaya Toast & Soft Eggs', localName: 'Roti Kaya Telur Goyang', timeMinutes: 15, difficulty: 'easy', mealType: 'breakfast', dietaryTags: ['halal', 'vegetarian', 'no-pork', 'no-seafood'],
+    ingredients: [
+      { ingredientId: 'bread', quantity: 4, unit: 'pieces' }, { ingredientId: 'kaya-spread', quantity: 50, unit: 'grams' },
+      { ingredientId: 'egg', quantity: 2, unit: 'pieces' }, { ingredientId: 'pepper', quantity: 1, unit: 'grams' },
+    ],
+    steps: ['Toast the bread until crisp and golden.', 'Spread kaya between the toast slices and cut them into neat halves.', 'Simmer eggs for 6 minutes, then crack them into a small bowl.', 'Finish the eggs with white pepper and serve immediately with the toast.'] },
+  { id: 'banana-oat-pancakes', name: 'Banana Oat Pancakes', localName: 'Pankek Pisang Oat', timeMinutes: 20, difficulty: 'easy', mealType: 'breakfast', dietaryTags: ['halal', 'vegetarian', 'no-pork', 'no-seafood'],
+    ingredients: [
+      { ingredientId: 'rolled-oats', quantity: 100, unit: 'grams' }, { ingredientId: 'banana', quantity: 2, unit: 'pieces' },
+      { ingredientId: 'egg', quantity: 2, unit: 'pieces' }, { ingredientId: 'milk', quantity: 100, unit: 'millilitres' },
+      { ingredientId: 'cooking-oil', quantity: 10, unit: 'millilitres' },
+    ],
+    steps: ['Mash one and a half bananas until smooth.', 'Mix in eggs, milk and rolled oats, then rest for 5 minutes.', 'Lightly oil a pan and cook small pancakes for 2 minutes per side.', 'Slice the remaining banana over the warm pancakes and serve.'] },
+  { id: 'potato-egg-hash', name: 'Potato Egg Hash', localName: 'Kentang Telur Goreng', timeMinutes: 25, difficulty: 'easy', mealType: 'breakfast', dietaryTags: ['halal', 'vegetarian', 'no-pork', 'no-seafood'],
+    ingredients: [
+      { ingredientId: 'potato', quantity: 3, unit: 'pieces' }, { ingredientId: 'egg', quantity: 2, unit: 'pieces' },
+      { ingredientId: 'onion', quantity: 1, unit: 'pieces' }, { ingredientId: 'spring-onion', quantity: 1, unit: 'stalks' },
+      { ingredientId: 'chilli', quantity: 1, unit: 'pieces' }, { ingredientId: 'cooking-oil', quantity: 20, unit: 'millilitres' },
+      { ingredientId: 'salt', quantity: 3, unit: 'grams' },
+    ],
+    steps: ['Dice the potatoes and boil them for 6 minutes, then drain.', 'Fry onion and potatoes in oil until the edges are golden.', 'Stir in sliced chilli and season with salt.', 'Make two spaces in the pan, crack in the eggs and cover until set.', 'Scatter over spring onion and serve from the pan.'] },
+  { id: 'tuna-cucumber-sandwich', name: 'Tuna Cucumber Sandwich', localName: 'Sandwic Tuna Timun', timeMinutes: 15, difficulty: 'easy', mealType: 'lunch', dietaryTags: ['halal', 'no-pork'],
+    ingredients: [
+      { ingredientId: 'bread', quantity: 4, unit: 'pieces' }, { ingredientId: 'canned-tuna', quantity: 180, unit: 'grams' },
+      { ingredientId: 'cucumber', quantity: 1, unit: 'pieces' }, { ingredientId: 'pepper', quantity: 1, unit: 'grams' },
+    ],
+    steps: ['Drain the tuna well and season it with white pepper.', 'Slice the cucumber into thin rounds.', 'Layer tuna and cucumber between the bread slices.', 'Toast lightly if you like, then cut into easy-to-hold triangles.'] },
+  { id: 'tofu-rice-bowl', name: 'Tofu Rice Bowl', localName: 'Nasi Tauhu Sayur', timeMinutes: 25, difficulty: 'easy', mealType: 'lunch', dietaryTags: ['halal', 'vegetarian', 'no-pork', 'no-seafood'],
+    ingredients: [
+      { ingredientId: 'cooked-rice', quantity: 400, unit: 'grams' }, { ingredientId: 'tofu', quantity: 300, unit: 'grams' },
+      { ingredientId: 'bok-choy', quantity: 200, unit: 'grams' }, { ingredientId: 'carrot', quantity: 1, unit: 'pieces' },
+      { ingredientId: 'soy-sauce', quantity: 25, unit: 'millilitres' }, { ingredientId: 'sesame-seed', quantity: 10, unit: 'grams' },
+      { ingredientId: 'cooking-oil', quantity: 15, unit: 'millilitres' },
+    ],
+    steps: ['Pat the tofu dry and cut it into cubes.', 'Pan-fry tofu in oil until golden on every side.', 'Add bok choy and carrot, then cook until just tender.', 'Pour in soy sauce and toss everything until glossy.', 'Serve over hot rice and finish with sesame seeds.'] },
+  { id: 'chicken-veggie-wrap', name: 'Chicken Veggie Wrap', localName: 'Wrap Ayam Sayur', timeMinutes: 25, difficulty: 'easy', mealType: 'lunch', dietaryTags: ['halal', 'no-pork', 'no-seafood'],
+    ingredients: [
+      { ingredientId: 'tortilla', quantity: 2, unit: 'pieces' }, { ingredientId: 'chicken-breast', quantity: 250, unit: 'grams' },
+      { ingredientId: 'lettuce', quantity: 80, unit: 'grams' }, { ingredientId: 'cucumber', quantity: 1, unit: 'pieces' },
+      { ingredientId: 'tomato', quantity: 2, unit: 'pieces' }, { ingredientId: 'cooking-oil', quantity: 15, unit: 'millilitres' },
+      { ingredientId: 'salt', quantity: 3, unit: 'grams' },
+    ],
+    steps: ['Season chicken with salt and sear it in oil until cooked through.', 'Rest the chicken for 3 minutes, then slice it.', 'Warm the tortillas briefly in a dry pan.', 'Layer lettuce, cucumber, tomato and chicken down the middle.', 'Fold tightly, toast the seam side and cut each wrap in half.'] },
+];
