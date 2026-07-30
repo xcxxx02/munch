@@ -16,9 +16,9 @@
   .section-title { @apply font-display text-2xl font-black tracking-[-0.04em] text-ink sm:text-3xl; }
   .eyebrow { @apply text-xs font-extrabold uppercase tracking-[0.16em] text-tomato; }
   .soft-card { @apply rounded-munch border-2 border-ink/10 bg-white/80 shadow-card backdrop-blur-sm; }
-  .primary-btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-custard px-5 font-extrabold text-ink shadow-[0_5px_0_#173B34] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_7px_0_#173B34] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50; }
+  .primary-btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-ink bg-custard px-5 font-extrabold text-ink shadow-[0_5px_0_#173B34] transition duration-200 hover:scale-[1.02] hover:shadow-[0_7px_0_#173B34] active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50; }
   .secondary-btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-2 border-ink/15 bg-white px-4 font-bold text-ink transition hover:border-ink/40 hover:bg-butter; }
-  .chip { @apply inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-ink/10 bg-white/80 px-4 text-sm font-extrabold text-ink transition hover:-translate-y-0.5 hover:border-ink/25; }
+  .chip { @apply inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-ink/10 bg-white/80 px-4 text-sm font-extrabold text-ink transition hover:scale-[1.02] hover:border-ink/25; }
   .chip-active { @apply border-ink bg-ink text-white shadow-[0_4px_0_rgba(86,57,111,.35)]; }
   .field { @apply min-h-12 w-full rounded-2xl border-2 border-ink/15 bg-white px-4 text-ink placeholder:text-ink/40 focus:border-aubergine focus:outline-none; }
 }

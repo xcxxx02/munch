@@ -17,7 +17,7 @@ export function Mascot({ compact = false, interactive = true }) {
       aria-label={interactive ? 'Say hello to Munch' : undefined}
       className={`group relative shrink-0 border-0 bg-transparent p-1 ${compact ? 'h-14 w-14' : 'h-36 w-36 sm:h-44 sm:w-44'} ${pressed ? 'animate-munch-bounce' : ''}`}
     >
-      <span className="absolute inset-[8%] rounded-[48%_48%_42%_42%] border-[3px] border-ink bg-white shadow-[0_9px_0_rgba(23,59,52,.14)] transition group-hover:-translate-y-1" aria-hidden="true">
+      <span className="absolute inset-[8%] rounded-[48%_48%_42%_42%] border-[3px] border-ink bg-white shadow-[0_9px_0_rgba(23,59,52,.14)] transition group-hover:scale-[1.03]" aria-hidden="true">
         <span className="rice-grain left-[25%] top-[18%] [--rice-rotate:35deg]" />
         <span className="rice-grain right-[23%] top-[28%] [--rice-rotate:-22deg]" />
         <span className="rice-grain left-[42%] top-[10%] [--rice-rotate:75deg]" />
