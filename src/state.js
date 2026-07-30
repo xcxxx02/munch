@@ -5,6 +5,8 @@ export const DEFAULT_STATE = {
   pantry: [],
   mealPlan: [],
   grocery: [],
+  customIngredients: [],
+  customRecipes: [],
   preferences: { dietaryTags: [] },
 };
 

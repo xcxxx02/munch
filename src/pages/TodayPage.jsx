@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowRight, Clock3, Leaf, Plus, Sparkles } from 'lucide-react';
 import { recipes, ingredients } from '../data.js';
 import { getAvailability, getExpiryRecommendations } from '../domain.js';
@@ -7,21 +7,26 @@ import { formatDate, ingredientById, todayISO } from '../utils.js';
 import { Mascot } from '../components/Mascot.jsx';
 import { RecipeCard } from '../components/RecipeCard.jsx';
 import { RecipeDialog } from '../components/RecipeDialog.jsx';
+import { IngredientThumb } from '../components/IngredientThumb.jsx';
 
 const moods = [['quick', 'Quick'], ['cozy', 'Cozy'], ['stocked', 'Use mine']];
 
 export function TodayPage() {
   const pantry = useMunchStore(state => state.pantry);
+  const customRecipes = useMunchStore(state => state.customRecipes);
+  const customIngredients = useMunchStore(state => state.customIngredients);
+  const allRecipes = [...recipes, ...customRecipes];
+  const allIngredients = [...ingredients, ...customIngredients];
   const [mood, setMood] = useState('quick');
   const [selected, setSelected] = useState(null);
   const expiry = getExpiryRecommendations(pantry, todayISO(), 4);
   const ranked = useMemo(() => {
-    let items = recipes.map(recipe => ({ recipe, availability: getAvailability(recipe, pantry) }));
+    let items = allRecipes.map(recipe => ({ recipe, availability: getAvailability(recipe, pantry) }));
     if (mood === 'quick') items = items.filter(item => item.recipe.timeMinutes <= 25);
     if (mood === 'cozy') items = items.filter(item => item.recipe.timeMinutes >= 30 || item.recipe.mealType === 'dinner');
     if (mood === 'stocked') items = items.filter(item => item.availability.availableCount > 0);
     return items.sort((a, b) => b.availability.availableCount - a.availability.availableCount || a.recipe.timeMinutes - b.recipe.timeMinutes);
-  }, [mood, pantry]);
+  }, [mood, pantry, customRecipes]);
   const recommendation = expiry[0] ? ranked.find(item => item.recipe.ingredients.some(ref => ref.ingredientId === expiry[0].ingredientId)) ?? ranked[0] : ranked[0];
 
   return <div className="page space-y-8">
@@ -51,7 +56,7 @@ export function TodayPage() {
       <aside className="col-span-12 rounded-munch border-2 border-ink bg-aubergine p-5 text-white shadow-pop lg:col-span-4">
         <div className="flex items-center justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-custard">Use these first</p><h2 className="mt-1 font-display text-2xl font-black">Pantry rescue</h2></div><Leaf className="text-mint" /></div>
         <div className="mt-5 space-y-3">
-          {expiry.length ? expiry.slice(0, 3).map(item => { const ingredient = ingredientById(ingredients, item.ingredientId); return <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/10 p-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-custard font-display font-black text-ink">{ingredient.name.slice(0, 1)}</span><span className="flex-1"><strong className="block">{ingredient.name}</strong><small className="text-white/60">{item.quantity} {item.unit} left</small></span><b className="text-xs text-custard">{item.expiryDate === todayISO() ? 'Today' : formatDate(item.expiryDate)}</b></div>; }) : <p className="rounded-2xl bg-white/10 p-4 text-sm font-semibold text-white/70">Nothing is in a hurry. Nice.</p>}
+          {expiry.length ? expiry.slice(0, 3).map(item => { const ingredient = ingredientById(allIngredients, item.ingredientId); return <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/10 p-3"><IngredientThumb ingredient={ingredient} size="small" /><span className="flex-1"><strong className="block">{ingredient.name}</strong><small className="text-white/60">{item.quantity} {item.unit} left</small></span><b className="text-xs text-custard">{item.expiryDate === todayISO() ? 'Today' : formatDate(item.expiryDate)}</b></div>; }) : <p className="rounded-2xl bg-white/10 p-4 text-sm font-semibold text-white/70">Nothing is in a hurry. Nice.</p>}
         </div>
         <a href="#/pantry" className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white font-extrabold text-aubergine">Open pantry <ArrowRight size={17} /></a>
       </aside>

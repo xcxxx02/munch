@@ -68,6 +68,10 @@ export function normalizeState(value) {
     pantry: normalizePantry(value.pantry),
     mealPlan: normalizeMealPlan(value.mealPlan),
     grocery,
+    customIngredients: Array.isArray(value.customIngredients)
+      ? value.customIngredients.filter(isRecord).filter(item => typeof item.id === 'string' && typeof item.name === 'string' && typeof item.defaultUnit === 'string') : [],
+    customRecipes: Array.isArray(value.customRecipes)
+      ? value.customRecipes.filter(isRecord).filter(item => typeof item.id === 'string' && typeof item.name === 'string' && Array.isArray(item.ingredients) && Array.isArray(item.steps)) : [],
     preferences: {
       ...value.preferences,
       dietaryTags: [...new Set(value.preferences.dietaryTags

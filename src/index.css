@@ -26,6 +26,8 @@
 .bento-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
 .rice-grain { position: absolute; width: 10px; height: 18px; border-radius: 999px; background: rgba(255,255,255,.82); transform: rotate(var(--rice-rotate,20deg)); }
 .recipe-photo { transition: transform 450ms cubic-bezier(.2,.8,.2,1); }
+.ingredient-sticker { transition: transform 180ms cubic-bezier(.2,.8,.2,1); font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif; }
+button:hover > .ingredient-sticker { transform: rotate(-4deg) scale(1.06); }
 .recipe-card:hover .recipe-photo { transform: scale(1.045) rotate(.4deg); }
 .page-enter { animation: popIn .38s cubic-bezier(.2,.8,.2,1) both; }
 .overflow-x-auto { scrollbar-width: none; }

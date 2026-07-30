@@ -5,9 +5,13 @@ import { ingredients } from '../data.js';
 import { useMunchStore } from '../store.js';
 import { ingredientById, label, todayISO } from '../utils.js';
 import { Modal } from './Modal.jsx';
+import { IngredientThumb } from './IngredientThumb.jsx';
+import { RecipeCover } from './RecipeCover.jsx';
 
 export function RecipeDialog({ recipe, onClose }) {
   const pantry = useMunchStore(state => state.pantry);
+  const customIngredients = useMunchStore(state => state.customIngredients);
+  const allIngredients = [...ingredients, ...customIngredients];
   const planRecipe = useMunchStore(state => state.planRecipe);
   const [mode, setMode] = useState('details');
   const [step, setStep] = useState(0);
@@ -20,7 +24,7 @@ export function RecipeDialog({ recipe, onClose }) {
       <div className="grid gap-6 md:grid-cols-[.9fr_1.1fr]">
         <div>
           <div className="aspect-[4/3] overflow-hidden rounded-[1.5rem] border-2 border-ink/10 bg-mint">
-            <img src={recipe.image} alt={recipe.name} className="h-full w-full object-cover" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = recipe.fallbackImage; }} />
+            <RecipeCover recipe={recipe} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="chip min-h-9 py-1"><Clock3 size={15} /> {recipe.timeMinutes} min</span>
@@ -38,9 +42,9 @@ export function RecipeDialog({ recipe, onClose }) {
             </div>
             <div className="space-y-2">
               {recipe.ingredients.map(ref => {
-                const ingredient = ingredientById(ingredients, ref.ingredientId);
+                const ingredient = ingredientById(allIngredients, ref.ingredientId);
                 const status = getIngredientAvailability(ref, pantry);
-                return <div key={ref.ingredientId} className="flex items-center gap-3 rounded-2xl border border-ink/10 bg-white/70 p-3"><span className={`grid h-8 w-8 place-items-center rounded-full ${status.available ? 'bg-mint text-leaf' : 'bg-tomato/15 text-tomato'}`}>{status.available ? <Check size={17} /> : <ShoppingBasket size={16} />}</span><span className="flex-1 font-bold">{ingredient.name}</span><small className="font-extrabold text-ink/50">{ref.quantity} {ref.unit}</small></div>;
+                return <div key={ref.ingredientId} className="flex items-center gap-3 rounded-2xl border border-ink/10 bg-white/70 p-3"><IngredientThumb ingredient={ingredient} size="small" /><span className="flex-1 font-bold">{ingredient.name}</span><span className={`${status.available ? 'text-leaf' : 'text-tomato'}`}>{status.available ? <Check size={17} /> : <ShoppingBasket size={16} />}</span><small className="font-extrabold text-ink/50">{ref.quantity} {ref.unit}</small></div>;
               })}
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">

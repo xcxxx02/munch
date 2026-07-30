@@ -1,4 +1,4 @@
-﻿import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
@@ -9,6 +9,9 @@ const files = {
   shell: '../src/components/Shell.jsx',
   modal: '../src/components/Modal.jsx',
   card: '../src/components/RecipeCard.jsx',
+  cover: '../src/components/RecipeCover.jsx',
+  editor: '../src/components/RecipeEditor.jsx',
+  ingredientThumb: '../src/components/IngredientThumb.jsx',
   css: '../src/index.css',
   tailwind: '../tailwind.config.js',
   data: '../src/data.js',
@@ -36,7 +39,9 @@ test('generated recipe assets and declared fallback are present', () => {
     assert.equal(existsSync(new URL(`../public/recipes/${asset}`, import.meta.url)), true, asset);
   }
   assert.match(source.data, /fallbackImage: resolveAssetPath\(FALLBACK_RECIPE_IMAGE\)/);
-  assert.match(source.card, /event\.currentTarget\.src = fallback/);
+  assert.match(source.cover, /event\.currentTarget\.src = recipe\.fallbackImage/);
+  assert.match(source.editor, /Make your own recipe/);
+  assert.match(source.ingredientThumb, /ingredient-sticker/);
 });
 
 test('React modal traps focus, supports Escape and restores the opener', () => {
