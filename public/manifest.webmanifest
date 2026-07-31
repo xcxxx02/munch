@@ -1,0 +1,16 @@
+{
+  "name": "Munch — little meals, less thinking",
+  "short_name": "Munch",
+  "description": "A tiny meal-planning buddy for recipes, pantry rescue and groceries.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF8E8",
+  "theme_color": "#FFF8E8",
+  "icons": [
+    { "src": "./icons/munch-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/munch-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/munch-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

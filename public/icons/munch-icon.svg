@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Munch bento buddy</title>
+  <rect width="512" height="512" rx="112" fill="#FFF8E8"/>
+  <path d="M103 125c35-47 91-73 153-73s118 26 153 73" fill="none" stroke="#FFD96A" stroke-width="28" stroke-linecap="round"/>
+  <rect x="78" y="86" width="356" height="356" rx="145" fill="#173B34" opacity=".14" transform="translate(0 12)"/>
+  <rect x="78" y="86" width="356" height="356" rx="145" fill="#fff" stroke="#173B34" stroke-width="14"/>
+  <path d="M85 316h342v2c0 68-55 123-123 123h-96c-68 0-123-55-123-123v-2Z" fill="#56396F"/>
+  <path d="M85 316h342" stroke="#173B34" stroke-width="14"/>
+  <ellipse cx="177" cy="247" rx="14" ry="16" fill="#173B34"/>
+  <ellipse cx="335" cy="247" rx="14" ry="16" fill="#173B34"/>
+  <path d="M221 279c13 22 57 22 70 0" fill="#F36F56" stroke="#173B34" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="139" cy="286" rx="21" ry="11" fill="#F36F56" opacity=".28"/>
+  <ellipse cx="373" cy="286" rx="21" ry="11" fill="#F36F56" opacity=".28"/>
+  <g fill="#F1E8D2" stroke="#173B34" stroke-width="4">
+    <ellipse cx="177" cy="155" rx="8" ry="18" transform="rotate(35 177 155)"/>
+    <ellipse cx="257" cy="132" rx="8" ry="18" transform="rotate(75 257 132)"/>
+    <ellipse cx="335" cy="174" rx="8" ry="18" transform="rotate(-25 335 174)"/>
+  </g>
+  <path d="m416 72 9 23 23 9-23 9-9 23-9-23-23-9 23-9 9-23Z" fill="#F36F56"/>
+</svg>

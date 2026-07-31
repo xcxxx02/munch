@@ -16,6 +16,11 @@ const files = {
   css: '../src/index.css',
   tailwind: '../tailwind.config.js',
   data: '../src/data.js',
+  plan: '../src/pages/PlanPage.jsx',
+  today: '../src/pages/TodayPage.jsx',
+  manifest: '../public/manifest.webmanifest',
+  serviceWorker: '../public/sw.js',
+  readme: '../README.md',
 };
 const source = Object.fromEntries(await Promise.all(Object.entries(files).map(async ([key, path]) => [key, await readFile(new URL(path, import.meta.url), 'utf8')])));
 
@@ -61,6 +66,23 @@ test('Pocket Bento visual system includes accessible motion and touch guardrails
   assert.match(source.css, /focus-visible/);
   assert.match(source.css, /prefers-reduced-motion:\s*reduce/);
   assert.match(source.tailwind, /munchBounce/);
+});
+
+test('mobile planning, pantry rescue and PWA shell are wired', () => {
+  assert.match(source.plan, /aria-label="Choose a day"/);
+  assert.match(source.plan, /Fill \$\{suggestions\.length\} empty slot/);
+  assert.match(source.today, /daysLeftLabel\(item\.expiryDate\)/);
+  assert.match(source.today, /Uses <strong>/);
+  assert.match(source.html, /rel="manifest"/);
+  assert.match(source.main, /serviceWorker\.register/);
+  assert.match(source.shell, /beforeinstallprompt/);
+  assert.match(source.shell, /aria-current=/);
+  assert.match(source.manifest, /"display": "standalone"/);
+  assert.match(source.serviceWorker, /munch-v1\.1\.0/);
+  assert.match(source.readme, /xcxxx02\.github\.io\/munch/);
+  for (const icon of ['munch-icon.svg', 'munch-192.png', 'munch-512.png']) {
+    assert.equal(existsSync(new URL(`../public/icons/${icon}`, import.meta.url)), true, icon);
+  }
 });
 
 test('active React source has no common mojibake markers', () => {

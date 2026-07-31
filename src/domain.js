@@ -99,6 +99,23 @@ export function getAvailability(recipe, pantry) {
   return { availableCount, totalCount: ingredients.length, missing };
 }
 
+export function rankRecipesForPantry(recipeList, pantry, prioritizedIngredientIds = []) {
+  const priorityIds = new Set(Array.isArray(prioritizedIngredientIds) ? prioritizedIngredientIds : []);
+  return (Array.isArray(recipeList) ? recipeList : [])
+    .map(recipe => {
+      const availability = getAvailability(recipe, pantry);
+      const rescueCount = (Array.isArray(recipe?.ingredients) ? recipe.ingredients : [])
+        .filter(ingredient => priorityIds.has(ingredient?.ingredientId)).length;
+      const coverage = availability.totalCount ? availability.availableCount / availability.totalCount : 0;
+      return { recipe, availability, rescueCount, coverage };
+    })
+    .sort((left, right) => right.rescueCount - left.rescueCount
+      || right.coverage - left.coverage
+      || right.availability.availableCount - left.availability.availableCount
+      || (left.recipe?.timeMinutes ?? Infinity) - (right.recipe?.timeMinutes ?? Infinity)
+      || compareStableValue(left.recipe?.name, right.recipe?.name));
+}
+
 export function getIngredientAvailability(ingredient, pantry) {
   const pantryItems = Array.isArray(pantry) ? pantry : [];
   const stock = pantryItems

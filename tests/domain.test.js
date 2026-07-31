@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import {
   getAvailability,
   getExpiryRecommendations,
+  rankRecipesForPantry,
   createMealPlanEntry,
   mergeGroceryItems,
 } from '../src/domain.js';
@@ -131,6 +132,21 @@ test('getAvailability treats a missing unit on either side as incompatible', () 
     ],
   });
 });
+test('rankRecipesForPantry prioritizes recipes that rescue expiring ingredients', () => {
+  const recipeList = [
+    { id: 'fully-stocked', name: 'Rice bowl', timeMinutes: 15, ingredients: [{ ingredientId: 'rice', quantity: 1, unit: 'bowls' }] },
+    { id: 'rescue-eggs', name: 'Egg toast', timeMinutes: 20, ingredients: [{ ingredientId: 'egg', quantity: 2, unit: 'pieces' }] },
+  ];
+  const pantry = [
+    { ingredientId: 'rice', quantity: 1, unit: 'bowls' },
+    { ingredientId: 'egg', quantity: 1, unit: 'pieces' },
+  ];
+  const ranked = rankRecipesForPantry(recipeList, pantry, ['egg']);
+  assert.equal(ranked[0].recipe.id, 'rescue-eggs');
+  assert.equal(ranked[0].rescueCount, 1);
+  assert.equal(ranked[1].availability.availableCount, 1);
+});
+
 test('getExpiryRecommendations ignores items without expiry and sorts soonest first', () => {
   const today = new Date('2026-07-28T00:00:00.000Z');
   const pantry = [

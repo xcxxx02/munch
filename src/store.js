@@ -74,6 +74,16 @@ export const useMunchStore = create((set, get) => ({
     const recipe = allRecipes.find(item => item.id === recipeId);
     return get().commit(state => reconcilePlannedGroceries(addRecipeToPlan(state, { date, mealType, recipeId }), allRecipes, allIngredients), `${recipe?.name ?? 'Meal'} added to your plan`);
   },
+  fillPlanDay(date, selections) {
+    const picks = Array.isArray(selections) ? selections.filter(item => item?.mealType && item?.recipeId) : [];
+    if (!picks.length) return false;
+    const allRecipes = [...recipes, ...get().customRecipes];
+    const allIngredients = [...ingredients, ...get().customIngredients];
+    return get().commit(state => {
+      const planned = picks.reduce((next, pick) => addRecipeToPlan(next, { date, mealType: pick.mealType, recipeId: pick.recipeId }), state);
+      return reconcilePlannedGroceries(planned, allRecipes, allIngredients);
+    }, `${picks.length} little meal${picks.length === 1 ? '' : 's'} added to your day`);
+  },
   removePlan(date, mealType) {
     return get().commit(state => reconcilePlannedGroceries({ ...state, mealPlan: state.mealPlan.filter(item => !(item.date === date && item.mealType === mealType)) }, [...recipes, ...get().customRecipes], [...ingredients, ...get().customIngredients]), 'Meal removed', 'wink');
   },
